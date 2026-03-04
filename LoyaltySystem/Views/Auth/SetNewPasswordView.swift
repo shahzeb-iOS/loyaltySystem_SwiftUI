@@ -14,12 +14,28 @@ struct SetNewPasswordView: View {
     
     var body: some View {
         ZStack {
-            Color.white
+            Color.appBackgroundWhite
                 .ignoresSafeArea()
             
             ScrollView {
                 VStack(spacing: 24) {
-                    Spacer().frame(height: 56)
+                    HStack {
+                        Button { onBack() } label: {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.appAccentGold)
+                                .frame(width: 44, height: 44)
+                                .background(Color.appLightBeige)
+                                .clipShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+                    .padding(.bottom, 8)
+                    
+                    Spacer().frame(height: 20)
                     
                     Text("Set New Password")
                         .font(.appAuthTitle)
@@ -44,7 +60,7 @@ struct SetNewPasswordView: View {
                             viewModel.isPasswordVisible.toggle()
                         } label: {
                             Image(systemName: viewModel.isPasswordVisible ? "eye.slash" : "eye")
-                                .font(.system(size: 20, weight: .regular))
+                                .font(.system(size: 16, weight: .regular))
                                 .foregroundColor(.appAccentGold)
                         }
                         .buttonStyle(.plain)
@@ -69,23 +85,6 @@ struct SetNewPasswordView: View {
                     .padding(.horizontal, 24)
                 }
                 .padding(.vertical, 24)
-            }
-            
-            VStack {
-                HStack {
-                    Button { onBack() } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.appAccentGold)
-                            .frame(width: 44, height: 44)
-                            .background(Color.appLightBeige)
-                            .clipShape(Circle())
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                Spacer()
             }
         }
     }

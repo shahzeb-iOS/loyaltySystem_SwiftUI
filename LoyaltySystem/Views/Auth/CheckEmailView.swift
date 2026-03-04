@@ -34,7 +34,7 @@ struct CheckEmailView: View {
             }
             .padding(24)
             .frame(maxWidth: 320)
-            .background(Color.white)
+            .background(Color.appBackgroundWhite)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .padding(.horizontal, 40)
         }

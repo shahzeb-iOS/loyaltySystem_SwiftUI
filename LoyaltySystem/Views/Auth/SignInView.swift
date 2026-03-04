@@ -15,10 +15,10 @@ struct SignInView: View {
 
     var body: some View {
         ZStack {
-            Color.white
+            Color.appBackgroundWhite
                 .ignoresSafeArea()
             
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     Spacer().frame(height: 40)
                     
@@ -63,7 +63,7 @@ struct SignInView: View {
                                 viewModel.isPasswordVisible.toggle()
                             } label: {
                                 Image(systemName: viewModel.isPasswordVisible ? "eye.slash" : "eye")
-                                    .font(.system(size: 20, weight: .regular))
+                                    .font(.system(size: 16, weight: .regular))
                                     .foregroundColor(.appAccentGold)
                             }
                             .buttonStyle(.plain)
@@ -110,11 +110,18 @@ struct SignInView: View {
                         .font(.appBody)
                         .fontWeight(.medium)
                         .foregroundColor(.appAccentGold)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 4)
+                        .contentShape(Rectangle())
                     }
+                    .padding(.top, 30)
+                    
+                    Spacer().frame(height: 30)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
             }
+            .scrollDismissesKeyboard(.interactively)
         }
     }
 }

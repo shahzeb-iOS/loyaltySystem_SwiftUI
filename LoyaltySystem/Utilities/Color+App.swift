@@ -18,6 +18,9 @@ extension Color {
     /// Light background (#F8F8F8)
     static let appBackground = Color("BackgroundLight")
     
+    /// White background (#FFFFFF)
+    static let appBackgroundWhite = Color("BackgroundWhite")
+    
     /// Primary text color (#333333)
     static let appTextPrimary = Color("TextPrimary")
     

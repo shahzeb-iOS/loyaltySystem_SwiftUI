@@ -14,12 +14,28 @@ struct ForgotPasswordView: View {
     
     var body: some View {
         ZStack {
-            Color.white
+            Color.appBackgroundWhite
                 .ignoresSafeArea()
             
             ScrollView {
                 VStack(spacing: 0) {
-                    Spacer().frame(height: 56)
+                    HStack {
+                        Button { onBack() } label: {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.appAccentGold)
+                                .frame(width: 44, height: 44)
+                                .background(Color.appLightBeige)
+                                .clipShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+                    .padding(.bottom, 8)
+                    
+                    Spacer().frame(height: 20)
                     
                     Text("Forgot password")
                         .font(.appAuthTitle)
@@ -58,23 +74,6 @@ struct ForgotPasswordView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
-            }
-            
-            VStack {
-                HStack {
-                    Button { onBack() } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.appAccentGold)
-                            .frame(width: 44, height: 44)
-                            .background(Color.appLightBeige)
-                            .clipShape(Circle())
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                Spacer()
             }
         }
     }

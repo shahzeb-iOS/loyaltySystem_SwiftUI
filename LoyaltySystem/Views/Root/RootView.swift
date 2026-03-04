@@ -12,7 +12,7 @@ struct RootView: View {
     
     var body: some View {
         ZStack {
-            Color.white
+            Color.appBackgroundWhite
                 .ignoresSafeArea()
             switch flowViewModel.currentScreen {
             case .splash:
@@ -65,7 +65,7 @@ struct RootView: View {
 
 struct MainPlaceholderView: View {
     var body: some View {
-        Color.appBackground
+        Color.appBackgroundWhite
             .overlay(
                 Text("Dashboard")
                     .font(.appTitle)

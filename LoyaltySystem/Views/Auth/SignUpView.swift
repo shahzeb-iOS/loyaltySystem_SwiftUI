@@ -21,18 +21,33 @@ struct SignUpView: View {
     
     var body: some View {
         ZStack {
-            Color.white
+            Color.appBackgroundWhite
                 .ignoresSafeArea()
             
-            ScrollView {
-                VStack(spacing: 0) {
-                    Spacer().frame(height: 40)
-                    
-                    Text("Sign up now")
-                        .font(.appAuthTitle)
-                        .foregroundColor(.appTextPrimary)
-                    
-                    Spacer().frame(height: 10)
+            VStack(spacing: 0) {
+                HStack {
+                    Button { onBack() } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.appAccentGold)
+                            .frame(width: 44, height: 44)
+                            .background(Color.appLightBeige)
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+                
+                ScrollView {
+                    VStack(spacing: 0) {
+                        Text("Sign up now")
+                            .font(.appAuthTitle)
+                            .foregroundColor(.appTextPrimary)
+                        
+                        Spacer().frame(height: 10)
                     
                     Text("Join today and start earning points.")
                         .font(.appAuthSubtitle)
@@ -61,7 +76,7 @@ struct SignUpView: View {
                                 Text(viewModel.hasSelectedDOB ? viewModel.dateOfBirth.formatted(date: .abbreviated, time: .omitted) : "Select Date of Birth")
                                     .foregroundColor(viewModel.hasSelectedDOB ? .appTextPrimary : .appTextSecondary)
                                 Spacer()
-                                Image("calender")
+                                Image("signUpCalenderIcon")
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 20, height: 20)
@@ -72,13 +87,24 @@ struct SignUpView: View {
                         }
                         .buttonStyle(.plain)
                         .sheet(isPresented: $showDatePicker) {
-                            VStack {
+                            VStack(spacing: 0) {
                                 DatePicker("Date of Birth", selection: $viewModel.dateOfBirth, displayedComponents: .date)
                                     .datePickerStyle(.graphical)
                                     .onChange(of: viewModel.dateOfBirth) { _, _ in
                                         viewModel.hasSelectedDOB = true
                                     }
                                 Spacer()
+                                Button("OK") {
+                                    showDatePicker = false
+                                }
+                                .font(.appButton)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(Color.appPrimaryDark)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .padding(.horizontal, 20)
+                                .padding(.bottom, 24)
                             }
                             .padding()
                             .presentationDetents([.medium])
@@ -99,7 +125,7 @@ struct SignUpView: View {
                                 viewModel.isPasswordVisible.toggle()
                             } label: {
                                 Image(systemName: viewModel.isPasswordVisible ? "eye.slash" : "eye")
-                                    .font(.system(size: 20, weight: .regular))
+                                    .font(.system(size: 16, weight: .regular))
                                     .foregroundColor(.appAccentGold)
                             }
                             .buttonStyle(.plain)
@@ -162,28 +188,16 @@ struct SignUpView: View {
                         .font(.appBody)
                         .fontWeight(.medium)
                         .foregroundColor(.appAccentGold)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 4)
+                        .contentShape(Rectangle())
                     }
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
+                }
             }
             
-            VStack {
-                HStack {
-                    Button { onBack() } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.appAccentGold)
-                            .frame(width: 44, height: 44)
-                            .background(Color.appLightBeige)
-                            .clipShape(Circle())
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                Spacer()
-            }
         }
     }
 }
