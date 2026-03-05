@@ -30,9 +30,9 @@ struct MainTabView: View {
                 case .center:
                     HomeView(userName: userName)
                 case .history:
-                    HistoryPlaceholderView()
+                    HistoryView(onBack: { selectedTab = .home })
                 case .profile:
-                    ProfilePlaceholderView()
+                    ProfileView(userName: userName, onBack: { selectedTab = .home })
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -9,6 +9,9 @@ import SwiftUI
 
 struct HomeView: View {
     let userName: String
+    @State private var showBookAppointment = false
+    @State private var showCatalog = false
+    @State private var showNotifications = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -41,16 +44,25 @@ struct HomeView: View {
             }
         }
         .background(Color.appBackgroundWhite)
+        .fullScreenCover(isPresented: $showBookAppointment) {
+            BookAppointmentFlowView(onDismiss: { showBookAppointment = false })
+        }
+        .fullScreenCover(isPresented: $showCatalog) {
+            CatalogView(onBack: { showCatalog = false })
+        }
+        .fullScreenCover(isPresented: $showNotifications) {
+            NotificationsView(onDismiss: { showNotifications = false })
+        }
     }
     
     private var navigationBar: some View {
         HStack {
             Spacer()
-            Button {} label: {
+            Button { showNotifications = true } label: {
                 Image("notificationIcon")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 20, height: 20)
+                    .frame(width: 24, height: 24)
                     .frame(width: 44, height: 44)
                     .background(Color.appLightBeige)
                     .clipShape(Circle())
@@ -148,20 +160,22 @@ struct HomeView: View {
         HStack(spacing: 20) {
             quickActionCard(
                 icon: "calendar",
-                title: "New Appointment"
+                title: "New Appointment",
+                action: { showBookAppointment = true }
             )
             .frame(maxWidth: .infinity)
             
             quickActionCard(
                 icon: "square.grid.2x2",
-                title: "Catalog"
+                title: "Catalog",
+                action: { showCatalog = true }
             )
             .frame(maxWidth: .infinity)
         }
     }
     
-    private func quickActionCard(icon: String, title: String) -> some View {
-        Button {} label: {
+    private func quickActionCard(icon: String, title: String, action: @escaping () -> Void = {}) -> some View {
+        Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: icon)
                     .font(.system(size: 20, weight: .regular))
