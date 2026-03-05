@@ -35,4 +35,10 @@ extension Color {
     
     /// Focus blue - active input border (#007AFF)
     static let appFocusBlue = Color("FocusBlue")
+    
+    /// Gold Member tag background (#29354b)
+    static let appGoldMemberBg = Color(red: 41/255, green: 53/255, blue: 75/255)
+    
+    /// Gold Member text color (#b8904d)
+    static let appGoldMemberText = Color(red: 184/255, green: 144/255, blue: 77/255)
 }

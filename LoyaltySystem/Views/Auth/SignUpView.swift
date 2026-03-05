@@ -11,7 +11,7 @@ struct SignUpView: View {
     @StateObject private var viewModel = AuthViewModel()
     @State private var showDatePicker = false
     @FocusState private var focusedField: SignUpField?
-    let onSignUp: (String) -> Void
+    let onSignUp: (String, String) -> Void
     let onSignIn: () -> Void
     let onBack: () -> Void
     
@@ -90,7 +90,7 @@ struct SignUpView: View {
                             VStack(spacing: 0) {
                                 DatePicker("Date of Birth", selection: $viewModel.dateOfBirth, displayedComponents: .date)
                                     .datePickerStyle(.graphical)
-                                    .onChange(of: viewModel.dateOfBirth) { _, _ in
+                                    .onChange(of: viewModel.dateOfBirth) { _ in
                                         viewModel.hasSelectedDOB = true
                                     }
                                 Spacer()
@@ -107,7 +107,6 @@ struct SignUpView: View {
                                 .padding(.bottom, 24)
                             }
                             .padding()
-                            .presentationDetents([.medium])
                         }
                         
                         HStack(spacing: 12) {
@@ -166,7 +165,7 @@ struct SignUpView: View {
                     
                     Button("Sign Up") {
                         Task { await viewModel.signUp() }
-                        onSignUp(viewModel.email)
+                        onSignUp(viewModel.email, viewModel.fullName)
                     }
                     .font(.appButton)
                     .foregroundColor(.white)
@@ -185,8 +184,7 @@ struct SignUpView: View {
                         Button("Sign in") {
                             onSignIn()
                         }
-                        .font(.appBody)
-                        .fontWeight(.medium)
+                        .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.appAccentGold)
                         .padding(.vertical, 8)
                         .padding(.horizontal, 4)
@@ -220,5 +218,5 @@ struct SignUpTextField: View {
 }
 
 #Preview {
-    SignUpView(onSignUp: { _ in }, onSignIn: {}, onBack: {})
+    SignUpView(onSignUp: { _, _ in }, onSignIn: {}, onBack: {})
 }

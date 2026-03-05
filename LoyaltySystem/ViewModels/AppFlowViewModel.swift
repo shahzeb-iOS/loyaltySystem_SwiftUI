@@ -27,7 +27,9 @@ final class AppFlowViewModel: ObservableObject {
     @Published var showSplash: Bool = true
     @Published var forgotPasswordEmail: String = ""
     @Published var otpEmail: String = ""
+    @Published var otpFullName: String = ""
     @Published var otpFromForgotPassword: Bool = false
+    @Published var currentUserName: String = "Yuly"
     
     func handleSplashComplete() {
         withAnimation {
@@ -57,8 +59,9 @@ final class AppFlowViewModel: ObservableObject {
         currentScreen = .checkEmail
     }
     
-    func navigateToOTPVerification(email: String, fromForgotPassword: Bool = false) {
+    func navigateToOTPVerification(email: String, fullName: String = "", fromForgotPassword: Bool = false) {
         otpEmail = email
+        otpFullName = fullName
         otpFromForgotPassword = fromForgotPassword
         currentScreen = .otpVerification
     }
@@ -87,7 +90,10 @@ final class AppFlowViewModel: ObservableObject {
         currentScreen = .forgotPassword
     }
 
-    func handleAuthSuccess() {
+    func handleAuthSuccess(userName: String? = nil) {
+        if let name = userName, !name.isEmpty {
+            currentUserName = name
+        }
         currentScreen = .main
     }
 }

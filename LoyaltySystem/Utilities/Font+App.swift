@@ -75,4 +75,20 @@ extension Font {
     
     // MARK: - Buttons
     static let appButton = Font.system(size: 17, weight: .semibold)
+    
+    // MARK: - Dashboard / Home
+    /// Greeting - Regular 23
+    static let appGreeting = Font.system(size: 23, weight: .regular)
+    
+    /// Subtitle - 400 regular 11
+    static let appGreetingSubtitle = Font.system(size: 11, weight: .regular)
+    
+    /// Section header - bold uppercase
+    static let appSectionHeader = Font.system(size: 14, weight: .bold)
+    
+    /// Points balance label
+    static let appPointsLabel = Font.system(size: 14, weight: .regular)
+    
+    /// Points value - large gold
+    static let appPointsValue = Font.system(size: 32, weight: .bold)
 }

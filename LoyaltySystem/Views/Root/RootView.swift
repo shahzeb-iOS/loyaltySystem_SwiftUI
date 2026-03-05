@@ -24,13 +24,13 @@ struct RootView: View {
                 )
             case .signIn:
                 SignInView(
-                    onSignIn: flowViewModel.handleAuthSuccess,
+                    onSignIn: { userName in flowViewModel.handleAuthSuccess(userName: userName) },
                     onSignUp: flowViewModel.navigateToSignUp,
                     onForgotPassword: flowViewModel.navigateToForgotPassword
                 )
             case .signUp:
                 SignUpView(
-                    onSignUp: { email in flowViewModel.navigateToOTPVerification(email: email) },
+                    onSignUp: { email, fullName in flowViewModel.navigateToOTPVerification(email: email, fullName: fullName) },
                     onSignIn: flowViewModel.navigateToSignIn,
                     onBack: flowViewModel.navigateToSignIn
                 )
@@ -48,7 +48,7 @@ struct RootView: View {
                 OTPVerificationView(
                     email: flowViewModel.otpEmail.isEmpty ? "adnan@gmail.com" : flowViewModel.otpEmail,
                     onBack: { flowViewModel.navigateBackFromOTP() },
-                    onVerified: { flowViewModel.otpFromForgotPassword ? flowViewModel.navigateToSetNewPassword() : flowViewModel.handleAuthSuccess() }
+                    onVerified: { flowViewModel.otpFromForgotPassword ? flowViewModel.navigateToSetNewPassword() : flowViewModel.handleAuthSuccess(userName: flowViewModel.otpFullName) }
                 )
             case .setNewPassword:
                 SetNewPasswordView(
@@ -56,21 +56,10 @@ struct RootView: View {
                     onResetComplete: flowViewModel.navigateBackToSignIn
                 )
             case .main:
-                MainPlaceholderView()
+                MainTabView(userName: flowViewModel.currentUserName)
             }
         }
         .hideKeyboardOnTap()
-    }
-}
-
-struct MainPlaceholderView: View {
-    var body: some View {
-        Color.appBackgroundWhite
-            .overlay(
-                Text("Dashboard")
-                    .font(.appTitle)
-                    .foregroundColor(.appTextPrimary)
-            )
     }
 }
 

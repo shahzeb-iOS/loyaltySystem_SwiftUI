@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SignInView: View {
     @StateObject private var viewModel = AuthViewModel()
-    let onSignIn: () -> Void
+    let onSignIn: (String?) -> Void
     let onSignUp: () -> Void
     let onForgotPassword: () -> Void
 
@@ -88,7 +88,8 @@ struct SignInView: View {
                     
                     Button("Sign In") {
                         Task { await viewModel.signIn() }
-                        onSignIn()
+                        let name = viewModel.email.split(separator: "@").first.map { String($0).capitalized } ?? nil
+                        onSignIn(name)
                     }
                     .font(.appButton)
                     .foregroundColor(.white)
@@ -107,8 +108,7 @@ struct SignInView: View {
                         Button("Sign up") {
                             onSignUp()
                         }
-                        .font(.appBody)
-                        .fontWeight(.medium)
+                        .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.appAccentGold)
                         .padding(.vertical, 8)
                         .padding(.horizontal, 4)
@@ -121,7 +121,6 @@ struct SignInView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
             }
-            .scrollDismissesKeyboard(.interactively)
         }
     }
 }
@@ -145,5 +144,5 @@ struct AuthTextFieldStyle: TextFieldStyle {
 }
 
 #Preview {
-    SignInView(onSignIn: {}, onSignUp: {}, onForgotPassword: {})
+    SignInView(onSignIn: { _ in }, onSignUp: {}, onForgotPassword: {})
 }
