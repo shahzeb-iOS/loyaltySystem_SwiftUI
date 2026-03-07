@@ -41,6 +41,8 @@ struct CheckEmailView: View {
     }
 }
 
-#Preview {
-    CheckEmailView(email: "abc@gmail.com", onDismiss: {})
+struct CheckEmailView_Previews: PreviewProvider {
+    static var previews: some View {
+        CheckEmailView(email: "abc@gmail.com", onDismiss: {})
+    }
 }

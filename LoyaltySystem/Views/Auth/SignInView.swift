@@ -9,11 +9,27 @@ import SwiftUI
 
 struct SignInView: View {
     @StateObject private var viewModel = AuthViewModel()
+    @State private var showErrorAlert = false
     let onSignIn: (String?) -> Void
     let onSignUp: () -> Void
     let onForgotPassword: () -> Void
 
     var body: some View {
+        content
+            .onChange(of: viewModel.errorMessage) { newValue in
+                showErrorAlert = (newValue != nil && !(newValue ?? "").isEmpty)
+            }
+            .alert("Login Failed", isPresented: $showErrorAlert) {
+                Button("OK") {
+                    showErrorAlert = false
+                    viewModel.errorMessage = nil
+                }
+            } message: {
+                Text(viewModel.errorMessage ?? "Invalid credentials")
+            }
+    }
+    
+    private var content: some View {
         ZStack {
             Color.appBackgroundWhite
                 .ignoresSafeArea()
@@ -43,18 +59,31 @@ struct SignInView: View {
                     Spacer().frame(height: 40)
                     
                     VStack(spacing: 16) {
-                        TextField("Enter your email", text: $viewModel.email)
-                            .textFieldStyle(AuthTextFieldStyle())
-                            .keyboardType(.emailAddress)
-                            .textInputAutocapitalization(.never)
+                        VStack(alignment: .leading, spacing: 4) {
+                            TextField("Enter your email", text: $viewModel.email)
+                                .textFieldStyle(AuthTextFieldStyle())
+                                .keyboardType(.emailAddress)
+                                .textInputAutocapitalization(.never)
+                            if !viewModel.email.isEmpty && !viewModel.isValidEmail {
+                                Text("Please enter a valid email")
+                                    .font(.appHint)
+                                    .foregroundColor(.red)
+                            }
+                        }
                         
                         // Password field with eye icon - tap to hide/show password
                         HStack(spacing: 12) {
                             Group {
                                 if viewModel.isPasswordVisible {
-                                    TextField("Enter your password", text: $viewModel.password)
+                                    TextField("Enter your password", text: Binding(
+                                        get: { viewModel.password },
+                                        set: { viewModel.password = String($0.prefix(15)) }
+                                    ))
                                 } else {
-                                    SecureField("Enter your password", text: $viewModel.password)
+                                    SecureField("Enter your password", text: Binding(
+                                        get: { viewModel.password },
+                                        set: { viewModel.password = String($0.prefix(15)) }
+                                    ))
                                 }
                             }
                             .textFieldStyle(.plain)
@@ -87,9 +116,13 @@ struct SignInView: View {
                     Spacer().frame(height: 40)
                     
                     Button("Sign In") {
-                        Task { await viewModel.signIn() }
-                        let name = viewModel.email.split(separator: "@").first.map { String($0).capitalized } ?? nil
-                        onSignIn(name)
+                        Task {
+                            await viewModel.signIn()
+                            if viewModel.signInSuccess {
+                                let name = viewModel.userNameFromAPI ?? viewModel.email.split(separator: "@").first.map { String($0).capitalized }
+                                onSignIn(name)
+                            }
+                        }
                     }
                     .font(.appButton)
                     .foregroundColor(.white)
@@ -97,8 +130,8 @@ struct SignInView: View {
                     .padding(.vertical, 16)
                     .background(Color.appPrimaryDark)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .disabled(!viewModel.isSignInValid)
-                    .opacity(viewModel.isSignInValid ? 1 : 0.6)
+                    .disabled(!viewModel.isSignInValid || viewModel.isLoading)
+                    .opacity(viewModel.isSignInValid && !viewModel.isLoading ? 1 : 0.6)
                     .padding(.horizontal, 24)
                     
                     HStack(spacing: 4) {
@@ -120,6 +153,11 @@ struct SignInView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
+            }
+            
+            if viewModel.isLoading {
+                LoadingOverlay()
+                    .zIndex(999)
             }
         }
     }
@@ -143,6 +181,8 @@ struct AuthTextFieldStyle: TextFieldStyle {
     }
 }
 
-#Preview {
-    SignInView(onSignIn: { _ in }, onSignUp: {}, onForgotPassword: {})
+struct SignInView_Previews: PreviewProvider {
+    static var previews: some View {
+        SignInView(onSignIn: { _ in }, onSignUp: {}, onForgotPassword: {})
+    }
 }

@@ -29,6 +29,8 @@ struct BookAppointmentFlowView: View {
     }
 }
 
-#Preview {
-    BookAppointmentFlowView(onDismiss: {})
+struct BookAppointmentFlowView_Previews: PreviewProvider {
+    static var previews: some View {
+        BookAppointmentFlowView(onDismiss: {})
+    }
 }

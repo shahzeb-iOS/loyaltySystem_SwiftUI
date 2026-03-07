@@ -85,6 +85,8 @@ struct NotificationsView: View {
     }
 }
 
-#Preview {
-    NotificationsView(onDismiss: {})
+struct NotificationsView_Previews: PreviewProvider {
+    static var previews: some View {
+        NotificationsView(onDismiss: {})
+    }
 }

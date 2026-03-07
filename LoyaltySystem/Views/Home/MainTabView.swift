@@ -133,6 +133,8 @@ struct ProfilePlaceholderView: View {
     }
 }
 
-#Preview {
-    MainTabView(userName: "Yuly")
+struct MainTabView_Previews: PreviewProvider {
+    static var previews: some View {
+        MainTabView(userName: "Yuly")
+    }
 }

@@ -193,6 +193,8 @@ final class OTPViewModel: ObservableObject {
     }
 }
 
-#Preview {
-    OTPVerificationView(email: "adnan@gmail.com", onBack: {}, onVerified: {})
+struct OTPVerificationView_Previews: PreviewProvider {
+    static var previews: some View {
+        OTPVerificationView(email: "adnan@gmail.com", onBack: {}, onVerified: {})
+    }
 }

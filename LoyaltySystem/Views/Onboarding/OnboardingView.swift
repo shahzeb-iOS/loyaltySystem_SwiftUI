@@ -94,6 +94,8 @@ struct OnboardingPageView: View {
     }
 }
 
-#Preview {
-    OnboardingView(onComplete: {}, onSkip: {})
+struct OnboardingView_Previews: PreviewProvider {
+    static var previews: some View {
+        OnboardingView(onComplete: {}, onSkip: {})
+    }
 }

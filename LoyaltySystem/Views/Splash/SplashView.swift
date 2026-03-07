@@ -28,6 +28,8 @@ struct SplashView: View {
     }
 }
 
-#Preview {
-    SplashView(onComplete: {})
+struct SplashView_Previews: PreviewProvider {
+    static var previews: some View {
+        SplashView(onComplete: {})
+    }
 }

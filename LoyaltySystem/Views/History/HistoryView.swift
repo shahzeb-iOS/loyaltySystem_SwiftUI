@@ -170,6 +170,8 @@ struct HistoryView: View {
     }
 }
 
-#Preview {
-    HistoryView(onBack: {})
+struct HistoryView_Previews: PreviewProvider {
+    static var previews: some View {
+        HistoryView(onBack: {})
+    }
 }

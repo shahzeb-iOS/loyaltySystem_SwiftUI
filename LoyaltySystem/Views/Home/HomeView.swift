@@ -338,6 +338,8 @@ struct HomeView: View {
     }
 }
 
-#Preview {
-    HomeView(userName: "Yuly")
+struct HomeView_Previews: PreviewProvider {
+    static var previews: some View {
+        HomeView(userName: "Yuly")
+    }
 }

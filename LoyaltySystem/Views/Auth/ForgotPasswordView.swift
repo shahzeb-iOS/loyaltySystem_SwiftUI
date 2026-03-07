@@ -79,6 +79,8 @@ struct ForgotPasswordView: View {
     }
 }
 
-#Preview {
-    ForgotPasswordView(onBack: {}, onResetSent: { _ in })
+struct ForgotPasswordView_Previews: PreviewProvider {
+    static var previews: some View {
+        ForgotPasswordView(onBack: {}, onResetSent: { _ in })
+    }
 }

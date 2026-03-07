@@ -324,6 +324,8 @@ struct CustomCalendarOverlay: View {
     }
 }
 
-#Preview {
-    BookAppointmentDateTimeView(onBack: {}, onConfirm: {})
+struct BookAppointmentDateTimeView_Previews: PreviewProvider {
+    static var previews: some View {
+        BookAppointmentDateTimeView(onBack: {}, onConfirm: {})
+    }
 }

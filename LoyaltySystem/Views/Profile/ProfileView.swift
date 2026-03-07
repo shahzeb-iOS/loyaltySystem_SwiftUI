@@ -165,6 +165,8 @@ struct ProfileView: View {
     }
 }
 
-#Preview {
-    ProfileView(userName: "Yuly", onBack: {})
+struct ProfileView_Previews: PreviewProvider {
+    static var previews: some View {
+        ProfileView(userName: "Yuly", onBack: {})
+    }
 }

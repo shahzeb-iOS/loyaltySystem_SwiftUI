@@ -128,6 +128,8 @@ struct BookAppointmentView: View {
     }
 }
 
-#Preview {
-    BookAppointmentView(onBack: {}, onContinue: {})
+struct BookAppointmentView_Previews: PreviewProvider {
+    static var previews: some View {
+        BookAppointmentView(onBack: {}, onContinue: {})
+    }
 }

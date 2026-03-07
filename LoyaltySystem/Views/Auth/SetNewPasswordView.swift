@@ -49,9 +49,15 @@ struct SetNewPasswordView: View {
                     HStack(spacing: 12) {
                         Group {
                             if viewModel.isPasswordVisible {
-                                TextField("Enter your password", text: $viewModel.password)
+                                TextField("Enter your password", text: Binding(
+                                    get: { viewModel.password },
+                                    set: { viewModel.password = String($0.prefix(15)) }
+                                ))
                             } else {
-                                SecureField("Enter your password", text: $viewModel.password)
+                                SecureField("Enter your password", text: Binding(
+                                    get: { viewModel.password },
+                                    set: { viewModel.password = String($0.prefix(15)) }
+                                ))
                             }
                         }
                         .textFieldStyle(.plain)
@@ -71,6 +77,14 @@ struct SetNewPasswordView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                     .padding(.horizontal, 24)
                     
+                    if !viewModel.passwordHint.isEmpty {
+                        Text(viewModel.passwordHint)
+                            .font(.appHint)
+                            .foregroundColor(.red)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 24)
+                    }
+                    
                     Button("Reset Password") {
                         onResetComplete()
                     }
@@ -80,8 +94,8 @@ struct SetNewPasswordView: View {
                     .padding(.vertical, 16)
                     .background(Color.appPrimaryDark)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .disabled(viewModel.password.count < 8)
-                    .opacity(viewModel.password.count >= 8 ? 1 : 0.6)
+                    .disabled(viewModel.password.count < 5 || viewModel.password.count > 15)
+                    .opacity(viewModel.password.count >= 5 && viewModel.password.count <= 15 ? 1 : 0.6)
                     .padding(.horizontal, 24)
                 }
                 .padding(.vertical, 24)
@@ -90,6 +104,8 @@ struct SetNewPasswordView: View {
     }
 }
 
-#Preview {
-    SetNewPasswordView(onBack: {}, onResetComplete: {})
+struct SetNewPasswordView_Previews: PreviewProvider {
+    static var previews: some View {
+        SetNewPasswordView(onBack: {}, onResetComplete: {})
+    }
 }

@@ -189,6 +189,8 @@ struct CatalogView: View {
     }
 }
 
-#Preview {
-    CatalogView(onBack: {})
+struct CatalogView_Previews: PreviewProvider {
+    static var previews: some View {
+        CatalogView(onBack: {})
+    }
 }
