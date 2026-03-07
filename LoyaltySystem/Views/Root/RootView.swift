@@ -56,7 +56,10 @@ struct RootView: View {
                     onResetComplete: flowViewModel.navigateBackToSignIn
                 )
             case .main:
-                MainTabView(loggedInUser: flowViewModel.loggedInUser ?? LoggedInUser(id: "1", name: "Guest", email: ""))
+                MainTabView(
+                    loggedInUser: flowViewModel.loggedInUser ?? LoggedInUser(id: "1", name: "Guest", email: ""),
+                    onLogout: flowViewModel.logout
+                )
             }
         }
         .hideKeyboardOnTap()

@@ -67,11 +67,14 @@ struct LoyaltyArchitectureView: View {
                 ZStack {
                     Circle()
                         .fill(Color.white.opacity(0.2))
-                        .frame(width: 48, height: 48)
-                    Image(systemName: "scope")
-                        .font(.system(size: 22))
+                        .frame(width: 56, height: 56)
+                    Image("frame")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 28, height: 28)
                         .foregroundColor(.white)
                 }
+                .frame(width: 56, height: 56)
                 
                 Spacer()
                 

@@ -10,6 +10,7 @@ import SwiftUI
 struct ProfileView: View {
     let loggedInUser: LoggedInUser
     let onBack: () -> Void
+    let onSignOut: () -> Void
     
     private var userEmail: String { loggedInUser.email.isEmpty ? "—" : loggedInUser.email }
     private var membership: String { "Gold Tier" }
@@ -133,7 +134,7 @@ struct ProfileView: View {
     
     private var actionButtons: some View {
         VStack(spacing: 12) {
-            Button(action: {}) {
+            Button(action: onSignOut) {
                 HStack(spacing: 8) {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
                         .font(.system(size: 18, weight: .medium))
@@ -168,6 +169,6 @@ struct ProfileView: View {
 
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        ProfileView(loggedInUser: LoggedInUser(id: "1", name: "Yuly", email: "yuly@example.com"), onBack: {})
+        ProfileView(loggedInUser: LoggedInUser(id: "1", name: "Yuly", email: "yuly@example.com"), onBack: {}, onSignOut: {})
     }
 }

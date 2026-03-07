@@ -98,4 +98,9 @@ final class AppFlowViewModel: ObservableObject {
         }
         currentScreen = .main
     }
+    
+    func logout() {
+        loggedInUser = nil
+        currentScreen = .signIn
+    }
 }

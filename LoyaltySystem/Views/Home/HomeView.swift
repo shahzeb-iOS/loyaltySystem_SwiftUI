@@ -105,7 +105,10 @@ struct HomeView: View {
     }
     
     private var loyaltyTiersSection: some View {
-        pointsBalanceCard
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(title: "LOYALTY TIERS", seeAllAction: {})
+            pointsBalanceCard
+        }
     }
     
     private var pointsBalanceCard: some View {
