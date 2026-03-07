@@ -48,10 +48,18 @@ final class APIService {
             }
             
             guard (200...299).contains(httpResponse.statusCode) else {
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("[API Error Response] \(request.url?.absoluteString ?? "unknown") [\(httpResponse.statusCode)]: \(jsonString)")
+                }
                 if let errorMsg = parseErrorMessage(from: data) {
                     throw APIError.serverError(message: errorMsg)
                 }
                 throw APIError.httpError(statusCode: httpResponse.statusCode)
+            }
+            
+            // Print API response for debugging
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("[API Response] \(request.url?.absoluteString ?? "unknown"): \(jsonString)")
             }
             
             let decoder = JSONDecoder()

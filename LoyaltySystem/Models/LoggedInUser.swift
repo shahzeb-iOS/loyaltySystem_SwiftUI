@@ -16,7 +16,7 @@ struct LoggedInUser {
     init?(from userData: UserData?) {
         guard let user = userData else { return nil }
         let id = user.id.map { String($0) } ?? "1"
-        let name = user.name ?? ""
+        let name = user.name ?? user.fullName ?? ""
         let email = user.email ?? ""
         self.id = id
         self.name = name

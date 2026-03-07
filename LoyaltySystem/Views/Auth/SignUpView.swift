@@ -11,6 +11,7 @@ struct SignUpView: View {
     @StateObject private var viewModel = AuthViewModel()
     @State private var showDatePicker = false
     @State private var showErrorAlert = false
+    @State private var showSuccessAlert = false
     @FocusState private var focusedField: SignUpField?
     let onSignUp: (String, String) -> Void
     let onSignIn: () -> Void
@@ -33,6 +34,14 @@ struct SignUpView: View {
                 }
             } message: {
                 Text(viewModel.errorMessage ?? "Something went wrong")
+            }
+            .alert("Account Created", isPresented: $showSuccessAlert) {
+                Button("OK") {
+                    showSuccessAlert = false
+                    onSignIn()
+                }
+            } message: {
+                Text("Account created successfully. Please sign in.")
             }
             .overlay(loadingOverlay)
     }
@@ -262,7 +271,7 @@ struct SignUpView: View {
             Task {
                 await viewModel.signUp()
                 if viewModel.signUpSuccess {
-                    onSignUp(viewModel.email, viewModel.fullName)
+                    showSuccessAlert = true
                 }
             }
         }

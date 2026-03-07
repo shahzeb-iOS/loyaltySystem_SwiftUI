@@ -75,9 +75,7 @@ struct LoyaltyArchitectureView: View {
                         .foregroundColor(.white)
                 }
                 .frame(width: 56, height: 56)
-                
                 Spacer()
-                
                 Text("Status Tier")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.white.opacity(0.9))

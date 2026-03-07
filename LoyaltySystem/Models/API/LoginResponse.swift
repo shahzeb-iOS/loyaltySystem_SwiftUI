@@ -23,6 +23,7 @@ struct LoginData: Decodable {
 struct UserData: Decodable {
     let id: Int?
     let name: String?
+    let fullName: String?
     let email: String?
     let phone: String?
 }

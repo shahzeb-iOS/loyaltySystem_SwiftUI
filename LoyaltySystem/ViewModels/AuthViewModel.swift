@@ -137,8 +137,10 @@ final class AuthViewModel: ObservableObject {
         
         do {
             let response: CreateAccountResponse = try await APIService.shared.request(endpoint)
-            print("[SignUp] API Response - success: \(response.success ?? false), message: \(response.message ?? "nil")")
-            signUpSuccess = response.success ?? false
+            let apiSuccess = response.status ?? response.success ?? false
+            let msg = (response.message ?? "").lowercased()
+            signUpSuccess = apiSuccess || msg.contains("success") || msg.contains("successful")
+            print("[SignUp] API Response - success: \(signUpSuccess), message: \(response.message ?? "nil")")
             if !signUpSuccess {
                 errorMessage = response.message ?? "Sign up failed"
                 print("[SignUp] Failed - \(errorMessage ?? "")")
