@@ -51,7 +51,10 @@ struct ForgotPasswordView: View {
                     
                     Spacer().frame(height: 40)
                     
-                    TextField("Enter your email", text: $viewModel.email)
+                    TextField("Enter your email", text: Binding(
+                        get: { viewModel.email },
+                        set: { viewModel.email = String($0.prefix(100)) }
+                    ))
                         .textFieldStyle(AuthTextFieldStyle())
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)

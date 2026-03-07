@@ -19,6 +19,8 @@ final class AuthViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var signInSuccess: Bool = false
     @Published var userNameFromAPI: String?
+    @Published var userIdFromAPI: String?
+    @Published var userDataFromAPI: UserData?
     
     // MARK: - Sign Up
     @Published var fullName: String = ""
@@ -37,36 +39,36 @@ final class AuthViewModel: ObservableObject {
     }
     
     var isSignInValid: Bool {
-        isValidEmail && !password.isEmpty && password.count >= 5 && password.count <= 15
+        isValidEmail && !password.isEmpty && password.count >= 4 && password.count <= 15
     }
     
     var isSignUpValid: Bool {
-        fullName.count >= 4 && fullName.count <= 20 &&
+        fullName.count >= 5 && fullName.count <= 12 &&
         isValidEmail &&
-        phone.count >= 4 && phone.count <= 15 &&
+        phone.count >= 8 && phone.count <= 18 &&
         hasSelectedDOB &&
-        password.count >= 5 && password.count <= 15 &&
+        password.count >= 4 && password.count <= 15 &&
         agreedToTerms
     }
     
     var fullNameHint: String {
         if fullName.isEmpty { return "" }
-        if fullName.count < 4 { return "Name must be at least 4 characters" }
-        if fullName.count > 20 { return "Name must be at most 20 characters" }
+        if fullName.count < 5 { return "Name must be 5-12 characters" }
+        if fullName.count > 12 { return "Name must be 5-12 characters" }
         return ""
     }
     
     var phoneHint: String {
         if phone.isEmpty { return "" }
-        if phone.count < 4 { return "Phone must be at least 4 characters" }
-        if phone.count > 15 { return "Phone must be at most 15 characters" }
+        if phone.count < 8 { return "Phone must be 8-18 characters" }
+        if phone.count > 18 { return "Phone must be 8-18 characters" }
         return ""
     }
     
     var passwordHint: String {
         if password.isEmpty { return "" }
-        if password.count < 5 { return "Password must be 5-15 characters" }
-        if password.count > 15 { return "Password must be 5-15 characters" }
+        if password.count < 4 { return "Password must be 4-15 characters" }
+        if password.count > 15 { return "Password must be 4-15 characters" }
         return ""
     }
     
@@ -77,6 +79,8 @@ final class AuthViewModel: ObservableObject {
         errorMessage = nil
         signInSuccess = false
         userNameFromAPI = nil
+        userIdFromAPI = nil
+        userDataFromAPI = nil
         
         defer { isLoading = false }
         
@@ -89,8 +93,16 @@ final class AuthViewModel: ObservableObject {
         do {
             let response: LoginResponse = try await APIService.shared.request(endpoint)
             print("[Login] API Response - success: \(response.success ?? false), message: \(response.message ?? "nil")")
-            signInSuccess = response.success ?? false
-            userNameFromAPI = response.data?.user?.name ?? response.user?.name ?? email.split(separator: "@").first.map { String($0).capitalized }
+            let user = response.data?.user ?? response.user
+            userDataFromAPI = user
+            userNameFromAPI = user?.name ?? email.split(separator: "@").first.map { String($0).capitalized }
+            userIdFromAPI = user?.id.map { String($0) }
+            
+            // API may return success: false with message: "Login successful" - treat message as source of truth
+            let msg = (response.message ?? "").lowercased()
+            let apiSuccess = response.success ?? false
+            signInSuccess = apiSuccess || msg.contains("success") || msg.contains("successful")
+            
             if !signInSuccess {
                 errorMessage = response.message ?? "Invalid credentials"
                 print("[Login] Wrong credentials - \(errorMessage ?? "")")

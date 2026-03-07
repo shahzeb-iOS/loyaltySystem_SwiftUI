@@ -1,0 +1,159 @@
+//
+//  LoyaltyArchitectureView.swift
+//  LoyaltySystem
+//
+//  Loyalty tier detail - PLUS tier with member privileges
+//
+
+import SwiftUI
+
+struct LoyaltyArchitectureView: View {
+    let onBack: () -> Void
+    let onContinue: () -> Void
+    
+    private let privileges = [
+        "1 complimentary facial analysis",
+        "1 complimentary facial or body consultation",
+        "Preferred pricing on new treatment launches",
+        "Personalized birthday greeting",
+        "Complimentary birthday facial 🎂✨"
+    ]
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    tierCard
+                    privilegesSection
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 100)
+            }
+            
+            continueButton
+        }
+        .background(Color.appBackgroundWhite)
+    }
+    
+    private var header: some View {
+        HStack(spacing: 16) {
+            Button(action: onBack) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.appTextSecondary)
+                    .frame(width: 44, height: 44)
+                    .background(Color.appLightBeige)
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+            
+            Text("Loyalty Architecture")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundColor(.black)
+            
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+        .padding(.bottom, 12)
+    }
+    
+    private var tierCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.2))
+                        .frame(width: 48, height: 48)
+                    Image(systemName: "scope")
+                        .font(.system(size: 22))
+                        .foregroundColor(.white)
+                }
+                
+                Spacer()
+                
+                Text("Status Tier")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white.opacity(0.9))
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("✨ PLUS")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.white)
+                
+                Text("Entry Level")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.white.opacity(0.95))
+                
+                Text("Where your journey to excellence begins.")
+                    .font(.system(size: 14, weight: .regular))
+                    .italic()
+                    .foregroundColor(.white.opacity(0.9))
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.appPrimaryDark)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.bottom, 24)
+    }
+    
+    private var privilegesSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Member Privileges")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.appTextSecondary)
+            
+            VStack(spacing: 12) {
+                ForEach(privileges, id: \.self) { privilege in
+                    HStack(alignment: .top, spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .stroke(Color.appAccentGold, lineWidth: 1.5)
+                                .frame(width: 24, height: 24)
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.appAccentGold)
+                        }
+                        
+                        Text(privilege)
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundColor(.appTextPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.appLightBeige)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+    
+    private var continueButton: some View {
+        Button(action: onContinue) {
+            Text("Continue")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(Color.appPrimaryDark)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 24)
+        .background(Color.appBackgroundWhite)
+    }
+}
+
+struct LoyaltyArchitectureView_Previews: PreviewProvider {
+    static var previews: some View {
+        LoyaltyArchitectureView(onBack: {}, onContinue: {})
+    }
+}

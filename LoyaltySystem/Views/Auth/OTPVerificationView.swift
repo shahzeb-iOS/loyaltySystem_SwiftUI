@@ -123,7 +123,7 @@ struct OTPDigitField: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(isFocused ? Color.appFocusBlue : Color.clear, lineWidth: 2)
+                    .stroke(isFocused ? Color.appFocusBorder : Color.clear, lineWidth: 2)
             )
             .onTapGesture { onTap() }
     }

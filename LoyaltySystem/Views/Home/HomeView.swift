@@ -8,10 +8,17 @@
 import SwiftUI
 
 struct HomeView: View {
-    let userName: String
+    let loggedInUser: LoggedInUser
+    @ObservedObject var dataService: DataService
     @State private var showBookAppointment = false
     @State private var showCatalog = false
     @State private var showNotifications = false
+    @State private var showLoyaltyArchitecture = false
+    
+    init(loggedInUser: LoggedInUser, dataService: DataService = .shared) {
+        self.loggedInUser = loggedInUser
+        self._dataService = ObservedObject(wrappedValue: dataService)
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -23,8 +30,8 @@ struct HomeView: View {
                     headerSection
                         .padding(.bottom, 24)
                 
-                // Points Balance Card
-                pointsBalanceCard
+                // Loyalty Tiers Section
+                loyaltyTiersSection
                     .padding(.bottom, 24)
                 
                 // Quick Actions
@@ -44,14 +51,25 @@ struct HomeView: View {
             }
         }
         .background(Color.appBackgroundWhite)
+        .task {
+            await dataService.fetchAllServices()
+            await dataService.fetchPromotions()
+            await dataService.fetchUserAppointments(userId: loggedInUser.id)
+        }
         .fullScreenCover(isPresented: $showBookAppointment) {
             BookAppointmentFlowView(onDismiss: { showBookAppointment = false })
         }
         .fullScreenCover(isPresented: $showCatalog) {
-            CatalogView(onBack: { showCatalog = false })
+            CatalogView(dataService: dataService, onBack: { showCatalog = false })
         }
         .fullScreenCover(isPresented: $showNotifications) {
             NotificationsView(onDismiss: { showNotifications = false })
+        }
+        .fullScreenCover(isPresented: $showLoyaltyArchitecture) {
+            LoyaltyArchitectureView(
+                onBack: { showLoyaltyArchitecture = false },
+                onContinue: { showLoyaltyArchitecture = false }
+            )
         }
     }
     
@@ -76,7 +94,7 @@ struct HomeView: View {
     
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 7) {
-            Text("Hello, \(userName)!")
+            Text("Hello, \(loggedInUser.name.isEmpty ? "Guest" : loggedInUser.name)!")
                 .font(.appGreeting)
                 .foregroundColor(.black)
             
@@ -84,6 +102,10 @@ struct HomeView: View {
                 .font(.appGreetingSubtitle)
                 .foregroundColor(.appTextSecondary)
         }
+    }
+    
+    private var loyaltyTiersSection: some View {
+        pointsBalanceCard
     }
     
     private var pointsBalanceCard: some View {
@@ -139,7 +161,7 @@ struct HomeView: View {
                 }
                 
                 Button("REDEEM") {
-                    // TODO
+                    showLoyaltyArchitecture = true
                 }
                 .font(.system(size: 9, weight: .semibold))
                 .foregroundColor(.white)
@@ -340,6 +362,6 @@ struct HomeView: View {
 
 struct HomeView_Previews: PreviewProvider {
     static var previews: some View {
-        HomeView(userName: "Yuly")
+        HomeView(loggedInUser: LoggedInUser(id: "1", name: "Yuly", email: "yuly@example.com"))
     }
 }

@@ -10,7 +10,7 @@ import SwiftUI
 struct SignInView: View {
     @StateObject private var viewModel = AuthViewModel()
     @State private var showErrorAlert = false
-    let onSignIn: (String?) -> Void
+    let onSignIn: (LoggedInUser) -> Void
     let onSignUp: () -> Void
     let onForgotPassword: () -> Void
 
@@ -60,15 +60,21 @@ struct SignInView: View {
                     
                     VStack(spacing: 16) {
                         VStack(alignment: .leading, spacing: 4) {
-                            TextField("Enter your email", text: $viewModel.email)
+                            TextField("Enter your email", text: Binding(
+                                get: { viewModel.email },
+                                set: { viewModel.email = String($0.prefix(100)) }
+                            ))
                                 .textFieldStyle(AuthTextFieldStyle())
                                 .keyboardType(.emailAddress)
                                 .textInputAutocapitalization(.never)
                             if !viewModel.email.isEmpty && !viewModel.isValidEmail {
                                 Text("Please enter a valid email")
                                     .font(.appHint)
-                                    .foregroundColor(.red)
+                                    .foregroundColor(.appErrorText)
                             }
+                        }
+                        .onChange(of: viewModel.email) { newValue in
+                            if newValue.count > 100 { viewModel.email = String(newValue.prefix(100)) }
                         }
                         
                         // Password field with eye icon - tap to hide/show password
@@ -101,6 +107,9 @@ struct SignInView: View {
                         .padding(.vertical, 16)
                         .background(Color.appLightBeige)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .onChange(of: viewModel.password) { newValue in
+                            if newValue.count > 15 { viewModel.password = String(newValue.prefix(15)) }
+                        }
                         
                         HStack {
                             Spacer()
@@ -119,8 +128,9 @@ struct SignInView: View {
                         Task {
                             await viewModel.signIn()
                             if viewModel.signInSuccess {
-                                let name = viewModel.userNameFromAPI ?? viewModel.email.split(separator: "@").first.map { String($0).capitalized }
-                                onSignIn(name)
+                                let user = LoggedInUser(from: viewModel.userDataFromAPI)
+                                    ?? LoggedInUser(id: viewModel.userIdFromAPI ?? "1", name: viewModel.userNameFromAPI ?? viewModel.email.split(separator: "@").first.map { String($0).capitalized } ?? "", email: viewModel.email)
+                                onSignIn(user)
                             }
                         }
                     }

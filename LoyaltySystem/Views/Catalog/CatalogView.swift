@@ -13,14 +13,29 @@ enum CatalogTab: String, CaseIterable {
 }
 
 struct CatalogView: View {
+    @ObservedObject var dataService: DataService
     let onBack: () -> Void
     
     @State private var selectedTab: CatalogTab = .all
-    @State private var catalogItems: [CatalogItem] = [
-        CatalogItem(title: "Hydra Facial", duration: "30 Min", price: "$40", points: 50, discount: "50% off", imageName: "face.smiling"),
-        CatalogItem(title: "Skin care kit", duration: nil, price: "$40", points: 100, discount: "10% off", imageName: "gift.fill"),
-        CatalogItem(title: "Classic Facial", duration: "30 Min", price: "$40", points: 200, discount: "50% off", imageName: "sparkles")
-    ]
+    
+    init(dataService: DataService = .shared, onBack: @escaping () -> Void) {
+        self._dataService = ObservedObject(wrappedValue: dataService)
+        self.onBack = onBack
+    }
+    
+    private var catalogItems: [CatalogItem] {
+        let serviceItems = dataService.services.map { CatalogItem.from($0) }
+        let items = serviceItems.isEmpty ? fallbackItems : serviceItems
+        return items
+    }
+    
+    private var fallbackItems: [CatalogItem] {
+        [
+            CatalogItem(title: "Hydra Facial", duration: "30 Min", price: "$40", points: 50, discount: "50% off", imageName: "face.smiling"),
+            CatalogItem(title: "Skin care kit", duration: nil, price: "$40", points: 100, discount: "10% off", imageName: "gift.fill"),
+            CatalogItem(title: "Classic Facial", duration: "30 Min", price: "$40", points: 200, discount: "50% off", imageName: "sparkles")
+        ]
+    }
     
     private let pointsBalance = 1250
     
@@ -43,6 +58,10 @@ struct CatalogView: View {
             }
         }
         .background(Color.appBackgroundWhite)
+        .task {
+            await dataService.fetchAllServices()
+            await dataService.fetchPromotions()
+        }
     }
     
     private var filteredItems: [CatalogItem] {
@@ -191,6 +210,6 @@ struct CatalogView: View {
 
 struct CatalogView_Previews: PreviewProvider {
     static var previews: some View {
-        CatalogView(onBack: {})
+        CatalogView(dataService: .shared, onBack: {})
     }
 }

@@ -80,7 +80,7 @@ struct SetNewPasswordView: View {
                     if !viewModel.passwordHint.isEmpty {
                         Text(viewModel.passwordHint)
                             .font(.appHint)
-                            .foregroundColor(.red)
+                            .foregroundColor(.appErrorText)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 24)
                     }
@@ -94,8 +94,8 @@ struct SetNewPasswordView: View {
                     .padding(.vertical, 16)
                     .background(Color.appPrimaryDark)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .disabled(viewModel.password.count < 5 || viewModel.password.count > 15)
-                    .opacity(viewModel.password.count >= 5 && viewModel.password.count <= 15 ? 1 : 0.6)
+                    .disabled(viewModel.password.count < 4 || viewModel.password.count > 15)
+                    .opacity(viewModel.password.count >= 4 && viewModel.password.count <= 15 ? 1 : 0.6)
                     .padding(.horizontal, 24)
                 }
                 .padding(.vertical, 24)

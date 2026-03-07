@@ -16,7 +16,8 @@ enum MainTab: Int, CaseIterable {
 }
 
 struct MainTabView: View {
-    let userName: String
+    let loggedInUser: LoggedInUser
+    @StateObject private var dataService = DataService.shared
     @State private var selectedTab: MainTab = .home
     
     var body: some View {
@@ -24,15 +25,15 @@ struct MainTabView: View {
             Group {
                 switch selectedTab {
                 case .home:
-                    HomeView(userName: userName)
+                    HomeView(loggedInUser: loggedInUser, dataService: dataService)
                 case .rewards:
                     RewardsPlaceholderView()
                 case .center:
-                    HomeView(userName: userName)
+                    HomeView(loggedInUser: loggedInUser, dataService: dataService)
                 case .history:
-                    HistoryView(onBack: { selectedTab = .home })
+                    HistoryView(userId: loggedInUser.id, dataService: dataService, onBack: { selectedTab = .home })
                 case .profile:
-                    ProfileView(userName: userName, onBack: { selectedTab = .home })
+                    ProfileView(loggedInUser: loggedInUser, onBack: { selectedTab = .home })
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -135,6 +136,6 @@ struct ProfilePlaceholderView: View {
 
 struct MainTabView_Previews: PreviewProvider {
     static var previews: some View {
-        MainTabView(userName: "Yuly")
+        MainTabView(loggedInUser: LoggedInUser(id: "1", name: "Yuly", email: "yuly@example.com"))
     }
 }

@@ -29,7 +29,7 @@ final class AppFlowViewModel: ObservableObject {
     @Published var otpEmail: String = ""
     @Published var otpFullName: String = ""
     @Published var otpFromForgotPassword: Bool = false
-    @Published var currentUserName: String = "Yuly"
+    @Published var loggedInUser: LoggedInUser?
     
     func handleSplashComplete() {
         withAnimation {
@@ -90,9 +90,11 @@ final class AppFlowViewModel: ObservableObject {
         currentScreen = .forgotPassword
     }
 
-    func handleAuthSuccess(userName: String? = nil) {
-        if let name = userName, !name.isEmpty {
-            currentUserName = name
+    func handleAuthSuccess(user: LoggedInUser? = nil) {
+        if let u = user {
+            loggedInUser = u
+        } else if !otpFullName.isEmpty || !otpEmail.isEmpty {
+            loggedInUser = LoggedInUser(id: "1", name: otpFullName, email: otpEmail)
         }
         currentScreen = .main
     }

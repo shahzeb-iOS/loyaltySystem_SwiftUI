@@ -116,13 +116,18 @@ struct SignUpView: View {
         VStack(alignment: .leading, spacing: 4) {
             SignUpTextField(placeholder: "Full Name", text: Binding(
                 get: { viewModel.fullName },
-                set: { viewModel.fullName = String($0.prefix(20)) }
+                set: { viewModel.fullName = String($0.prefix(12)) }
             ), isFocused: focusedField == .fullName)
                 .focused($focusedField, equals: .fullName)
+                .onChange(of: viewModel.fullName) { newValue in
+                    if newValue.count > 12 {
+                        viewModel.fullName = String(newValue.prefix(12))
+                    }
+                }
             if !viewModel.fullNameHint.isEmpty {
                 Text(viewModel.fullNameHint)
                     .font(.appHint)
-                    .foregroundColor(.red)
+                    .foregroundColor(.appErrorText)
             }
         }
     }
@@ -130,15 +135,21 @@ struct SignUpView: View {
     @ViewBuilder
     private var emailField: some View {
         VStack(alignment: .leading, spacing: 4) {
-            SignUpTextField(placeholder: "Abc@email.com", text: $viewModel.email, isFocused: focusedField == .email)
+            SignUpTextField(placeholder: "Abc@email.com", text: Binding(
+                get: { viewModel.email },
+                set: { viewModel.email = String($0.prefix(100)) }
+            ), isFocused: focusedField == .email)
                 .focused($focusedField, equals: .email)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
             if !viewModel.email.isEmpty && !viewModel.isValidEmail {
                 Text("Please enter a valid email")
                     .font(.appHint)
-                    .foregroundColor(.red)
+                    .foregroundColor(.appErrorText)
             }
+        }
+        .onChange(of: viewModel.email) { newValue in
+            if newValue.count > 100 { viewModel.email = String(newValue.prefix(100)) }
         }
     }
     
@@ -147,14 +158,17 @@ struct SignUpView: View {
         VStack(alignment: .leading, spacing: 4) {
             SignUpTextField(placeholder: "+1 233 2342424", text: Binding(
                 get: { viewModel.phone },
-                set: { viewModel.phone = String($0.prefix(15)) }
+                set: { viewModel.phone = String($0.prefix(18)) }
             ), isFocused: focusedField == .phone)
                 .focused($focusedField, equals: .phone)
                 .keyboardType(.phonePad)
+                .onChange(of: viewModel.phone) { newValue in
+                    if newValue.count > 18 { viewModel.phone = String(newValue.prefix(18)) }
+                }
             if !viewModel.phoneHint.isEmpty {
                 Text(viewModel.phoneHint)
                     .font(.appHint)
-                    .foregroundColor(.red)
+                    .foregroundColor(.appErrorText)
             }
         }
     }
@@ -210,8 +224,11 @@ struct SignUpView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .stroke(focusedField == .password ? Color.appFocusBlue : Color.clear, lineWidth: 2)
+                .stroke(focusedField == .password ? Color.appFocusBorder : Color.clear, lineWidth: 2)
         )
+        .onChange(of: viewModel.password) { newValue in
+            if newValue.count > 15 { viewModel.password = String(newValue.prefix(15)) }
+        }
     }
     
     @ViewBuilder
@@ -219,7 +236,7 @@ struct SignUpView: View {
         if !viewModel.passwordHint.isEmpty {
             Text(viewModel.passwordHint)
                 .font(.appHint)
-                .foregroundColor(.red)
+                .foregroundColor(.appErrorText)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -316,7 +333,7 @@ struct SignUpTextField: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(isFocused ? Color.appFocusBlue : Color.clear, lineWidth: 2)
+                    .stroke(isFocused ? Color.appFocusBorder : Color.clear, lineWidth: 2)
             )
     }
 }

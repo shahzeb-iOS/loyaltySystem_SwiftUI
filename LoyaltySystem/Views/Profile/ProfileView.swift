@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct ProfileView: View {
-    let userName: String
+    let loggedInUser: LoggedInUser
     let onBack: () -> Void
     
-    private let userEmail = "Abc@gmail.com"
-    private let membership = "Gold Tier"
-    private let loyaltyId = "#GT1234"
+    private var userEmail: String { loggedInUser.email.isEmpty ? "—" : loggedInUser.email }
+    private var membership: String { "Gold Tier" }
+    private var loyaltyId: String { "#\(loggedInUser.id)" }
     
     private let lightPink = Color(red: 255/255, green: 230/255, blue: 230/255)
     private let signOutRed = Color(red: 220/255, green: 100/255, blue: 80/255)
@@ -84,7 +84,7 @@ struct ProfileView: View {
                 .offset(x: 4, y: 4)
             }
             
-            Text(userName)
+            Text(loggedInUser.name.isEmpty ? "Guest" : loggedInUser.name)
                 .font(.system(size: 22, weight: .bold))
                 .foregroundColor(.black)
             
@@ -97,8 +97,9 @@ struct ProfileView: View {
     
     private var infoFields: some View {
         VStack(spacing: 12) {
-            profileField(icon: "person", label: "Name", value: userName)
+            profileField(icon: "person", label: "Name", value: loggedInUser.name.isEmpty ? "—" : loggedInUser.name)
             profileField(icon: "creditcard", label: "Membership", value: membership)
+            profileField(icon: "phone", label: "Phone", value: loggedInUser.phone ?? "—")
             profileField(icon: "exclamationmark.circle", label: "Loyalty ID", value: loyaltyId)
         }
     }
@@ -167,6 +168,6 @@ struct ProfileView: View {
 
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        ProfileView(userName: "Yuly", onBack: {})
+        ProfileView(loggedInUser: LoggedInUser(id: "1", name: "Yuly", email: "yuly@example.com"), onBack: {})
     }
 }

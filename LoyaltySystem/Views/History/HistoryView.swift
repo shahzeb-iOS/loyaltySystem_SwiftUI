@@ -14,13 +14,29 @@ enum HistoryFilter: String, CaseIterable {
 }
 
 struct HistoryView: View {
+    let userId: String
+    @ObservedObject var dataService: DataService
     let onBack: () -> Void
     
     @State private var selectedFilter: HistoryFilter = .all
-    @State private var historyEntries: [HistoryEntry] = [
-        HistoryEntry(serviceName: "Classic Facial", location: "Lahore Spa", status: .upcoming, date: "Feb 14, 2026", time: "10:00 AM", points: 10),
-        HistoryEntry(serviceName: "Classic Facial", location: "Lahore Spa", status: .completed, date: "Feb 10, 2026", time: "11:00 AM", points: 10)
-    ]
+    
+    init(userId: String = "1", dataService: DataService = .shared, onBack: @escaping () -> Void) {
+        self.userId = userId
+        self._dataService = ObservedObject(wrappedValue: dataService)
+        self.onBack = onBack
+    }
+    
+    private var historyEntries: [HistoryEntry] {
+        let entries = dataService.appointments.map { HistoryEntry.from($0) }
+        return entries.isEmpty ? fallbackEntries : entries
+    }
+    
+    private var fallbackEntries: [HistoryEntry] {
+        [
+            HistoryEntry(serviceName: "Classic Facial", location: "Lahore Spa", status: .upcoming, date: "Feb 14, 2026", time: "10:00 AM", points: 10),
+            HistoryEntry(serviceName: "Classic Facial", location: "Lahore Spa", status: .completed, date: "Feb 10, 2026", time: "11:00 AM", points: 10)
+        ]
+    }
     
     private var filteredEntries: [HistoryEntry] {
         switch selectedFilter {
@@ -49,6 +65,9 @@ struct HistoryView: View {
             }
         }
         .background(Color.appBackgroundWhite)
+        .task {
+            await dataService.fetchUserAppointments(userId: userId)
+        }
     }
     
     private var header: some View {
@@ -172,6 +191,6 @@ struct HistoryView: View {
 
 struct HistoryView_Previews: PreviewProvider {
     static var previews: some View {
-        HistoryView(onBack: {})
+        HistoryView(userId: "1", dataService: .shared, onBack: {})
     }
 }

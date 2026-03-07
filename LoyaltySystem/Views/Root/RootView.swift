@@ -24,7 +24,7 @@ struct RootView: View {
                 )
             case .signIn:
                 SignInView(
-                    onSignIn: { userName in flowViewModel.handleAuthSuccess(userName: userName) },
+                    onSignIn: { user in flowViewModel.handleAuthSuccess(user: user) },
                     onSignUp: flowViewModel.navigateToSignUp,
                     onForgotPassword: flowViewModel.navigateToForgotPassword
                 )
@@ -48,7 +48,7 @@ struct RootView: View {
                 OTPVerificationView(
                     email: flowViewModel.otpEmail.isEmpty ? "adnan@gmail.com" : flowViewModel.otpEmail,
                     onBack: { flowViewModel.navigateBackFromOTP() },
-                    onVerified: { flowViewModel.otpFromForgotPassword ? flowViewModel.navigateToSetNewPassword() : flowViewModel.handleAuthSuccess(userName: flowViewModel.otpFullName) }
+                    onVerified: { flowViewModel.otpFromForgotPassword ? flowViewModel.navigateToSetNewPassword() : flowViewModel.handleAuthSuccess() }
                 )
             case .setNewPassword:
                 SetNewPasswordView(
@@ -56,7 +56,7 @@ struct RootView: View {
                     onResetComplete: flowViewModel.navigateBackToSignIn
                 )
             case .main:
-                MainTabView(userName: flowViewModel.currentUserName)
+                MainTabView(loggedInUser: flowViewModel.loggedInUser ?? LoggedInUser(id: "1", name: "Guest", email: ""))
             }
         }
         .hideKeyboardOnTap()

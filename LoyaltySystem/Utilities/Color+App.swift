@@ -36,6 +36,12 @@ extension Color {
     /// Focus blue - active input border (#007AFF)
     static let appFocusBlue = Color("FocusBlue")
     
+    /// Focus border - soft gold for selected fields (matches app theme)
+    static let appFocusBorder = Color(red: 160/255, green: 130/255, blue: 80/255)
+    
+    /// Error/validation hint - soft coral (softer than red)
+    static let appErrorText = Color(red: 200/255, green: 95/255, blue: 85/255)
+    
     /// Gold Member tag background (#29354b)
     static let appGoldMemberBg = Color(red: 41/255, green: 53/255, blue: 75/255)
     

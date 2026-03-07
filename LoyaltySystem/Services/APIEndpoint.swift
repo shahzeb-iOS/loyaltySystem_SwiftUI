@@ -17,17 +17,24 @@ enum HTTPMethod: String {
 enum APIEndpoint {
     case login(email: String, password: String, fcmToken: String)
     case createAccount(fullName: String, email: String, password: String, phone: String, dob: String)
+    case getPromotions
+    case getUserAppointments(userId: String, status: String)
+    case getAllServices
     
     var path: String {
         switch self {
         case .login: return "/login"
         case .createAccount: return "/createAccount"
+        case .getPromotions: return "/getPromotions"
+        case .getUserAppointments: return "/getUserAppointments"
+        case .getAllServices: return "/getAllServices"
         }
     }
     
     var method: HTTPMethod {
         switch self {
-        case .login, .createAccount: return .post
+        case .login, .createAccount, .getUserAppointments: return .post
+        case .getPromotions, .getAllServices: return .get
         }
     }
     
@@ -53,6 +60,14 @@ enum APIEndpoint {
                 "dob": dob
             ]
             return try? JSONSerialization.data(withJSONObject: params)
+        case .getUserAppointments(let userId, let status):
+            let params: [String: Any] = [
+                "userid": userId,
+                "status": status
+            ]
+            return try? JSONSerialization.data(withJSONObject: params)
+        case .getPromotions, .getAllServices:
+            return nil
         }
     }
     
