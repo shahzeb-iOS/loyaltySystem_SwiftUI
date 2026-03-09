@@ -12,6 +12,8 @@ struct ProfileView: View {
     let onBack: () -> Void
     let onSignOut: () -> Void
     
+    @State private var showLogoutAlert = false
+    
     private var userEmail: String { loggedInUser.email.isEmpty ? "—" : loggedInUser.email }
     private var membership: String { "Gold Tier" }
     private var loyaltyId: String { "#\(loggedInUser.id)" }
@@ -35,6 +37,14 @@ struct ProfileView: View {
             }
         }
         .background(Color.appBackgroundWhite)
+        .alert("Sign out?", isPresented: $showLogoutAlert) {
+            Button("No", role: .cancel) { }
+            Button("Logout", role: .destructive) {
+                onSignOut()
+            }
+        } message: {
+            Text("Are you sure you want to sign out?")
+        }
     }
     
     private var header: some View {
@@ -134,7 +144,7 @@ struct ProfileView: View {
     
     private var actionButtons: some View {
         VStack(spacing: 12) {
-            Button(action: onSignOut) {
+            Button(action: { showLogoutAlert = true }) {
                 HStack(spacing: 8) {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
                         .font(.system(size: 18, weight: .medium))

@@ -52,6 +52,7 @@ struct RootView: View {
                 )
             case .setNewPassword:
                 SetNewPasswordView(
+                    email: flowViewModel.otpEmail,
                     onBack: flowViewModel.navigateBackToOTP,
                     onResetComplete: flowViewModel.navigateBackToSignIn
                 )

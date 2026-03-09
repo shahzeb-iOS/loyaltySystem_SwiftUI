@@ -9,6 +9,8 @@ import SwiftUI
 
 struct OTPVerificationView: View {
     @StateObject private var viewModel = OTPViewModel()
+    @State private var isVerifying = false
+    @State private var verifyError: String?
     let email: String
     let onBack: () -> Void
     let onVerified: () -> Void
@@ -68,8 +70,18 @@ struct OTPVerificationView: View {
                     }
                     .padding(.horizontal, 24)
                     
+                    if let err = verifyError {
+                        Text(err)
+                            .font(.appHint)
+                            .foregroundColor(.appErrorText)
+                            .padding(.horizontal, 24)
+                    }
+                    
                     Button("Verify") {
-                        onVerified()
+                        verifyError = nil
+                        let otp = viewModel.otpString
+                        guard viewModel.isComplete, !otp.isEmpty else { return }
+                        Task { await verifyOTP(otp: otp) }
                     }
                     .font(.appButton)
                     .foregroundColor(.white)
@@ -77,8 +89,8 @@ struct OTPVerificationView: View {
                     .padding(.vertical, 16)
                     .background(Color.appPrimaryDark)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .disabled(!viewModel.isComplete)
-                    .opacity(viewModel.isComplete ? 1 : 0.6)
+                    .disabled(!viewModel.isComplete || isVerifying)
+                    .opacity(viewModel.isComplete && !isVerifying ? 1 : 0.6)
                     .padding(.horizontal, 24)
                     
                     HStack {
@@ -105,6 +117,24 @@ struct OTPVerificationView: View {
             get: { viewModel.digit(at: index) },
             set: { viewModel.setDigit($0, at: index) }
         )
+    }
+    
+    private func verifyOTP(otp: String) async {
+        isVerifying = true
+        defer { isVerifying = false }
+        let endpoint = APIEndpoint.verifyOtp(email: email, otp: otp)
+        do {
+            let response: MessageResponse = try await APIService.shared.request(endpoint)
+            let ok = response.success ?? response.status ?? false
+            let msg = (response.message ?? "").lowercased()
+            if ok || msg.contains("success") {
+                await MainActor.run { onVerified() }
+            } else {
+                await MainActor.run { verifyError = response.message ?? "Verification failed" }
+            }
+        } catch {
+            await MainActor.run { verifyError = error.localizedDescription }
+        }
     }
 }
 
@@ -144,6 +174,10 @@ final class OTPViewModel: ObservableObject {
     
     var isComplete: Bool {
         digits.allSatisfy { $0.count == 1 }
+    }
+    
+    var otpString: String {
+        digits.joined()
     }
     
     func digit(at index: Int) -> String {

@@ -183,7 +183,7 @@ struct CatalogView: View {
                         .foregroundColor(.appAccentGold)
                 }
                 
-                // Redeem button - spans most of bottom width, 20-24pt from edges
+                // Redeem button
                 Button(action: {}) {
                     Text("Redeem")
                         .font(.system(size: 14, weight: .regular))

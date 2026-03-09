@@ -40,6 +40,16 @@ final class APIService {
             throw APIError.invalidURL
         }
         
+        // Log request
+        let urlString = request.url?.absoluteString ?? "unknown"
+        print("[API Request] \(request.httpMethod ?? "?") \(urlString)")
+        if let headers = request.allHTTPHeaderFields, !headers.isEmpty {
+            print("[API Request Headers] \(headers)")
+        }
+        if let body = request.httpBody, let bodyString = String(data: body, encoding: .utf8) {
+            print("[API Request Body] \(bodyString)")
+        }
+        
         do {
             let (data, response) = try await session.data(for: request)
             
@@ -47,19 +57,15 @@ final class APIService {
                 throw APIError.invalidResponse
             }
             
+            let responseString = String(data: data, encoding: .utf8) ?? "<non-UTF8>"
+            print("[API Response] \(httpResponse.statusCode) \(urlString)")
+            print("[API Response Body] \(responseString)")
+            
             guard (200...299).contains(httpResponse.statusCode) else {
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    print("[API Error Response] \(request.url?.absoluteString ?? "unknown") [\(httpResponse.statusCode)]: \(jsonString)")
-                }
                 if let errorMsg = parseErrorMessage(from: data) {
                     throw APIError.serverError(message: errorMsg)
                 }
                 throw APIError.httpError(statusCode: httpResponse.statusCode)
-            }
-            
-            // Print API response for debugging
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("[API Response] \(request.url?.absoluteString ?? "unknown"): \(jsonString)")
             }
             
             let decoder = JSONDecoder()
@@ -79,13 +85,17 @@ final class APIService {
         guard let request = endpoint.urlRequest else {
             throw APIError.invalidURL
         }
-        
+        let urlString = request.url?.absoluteString ?? "unknown"
+        print("[API Request] \(request.httpMethod ?? "?") \(urlString)")
+        if let body = request.httpBody, let bodyString = String(data: body, encoding: .utf8) {
+            print("[API Request Body] \(bodyString)")
+        }
         let (data, response) = try await session.data(for: request)
-        
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
         }
-        
+        print("[API Response] \(httpResponse.statusCode) \(urlString)")
+        print("[API Response Body] \(String(data: data, encoding: .utf8) ?? "<non-UTF8>")")
         return (data, httpResponse)
     }
 }

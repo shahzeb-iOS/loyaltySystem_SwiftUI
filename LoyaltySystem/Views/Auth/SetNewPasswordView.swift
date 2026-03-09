@@ -9,6 +9,9 @@ import SwiftUI
 
 struct SetNewPasswordView: View {
     @StateObject private var viewModel = AuthViewModel()
+    @State private var isUpdating = false
+    @State private var updateError: String?
+    let email: String
     let onBack: () -> Void
     let onResetComplete: () -> Void
     
@@ -85,8 +88,17 @@ struct SetNewPasswordView: View {
                             .padding(.horizontal, 24)
                     }
                     
+                    if let err = updateError {
+                        Text(err)
+                            .font(.appHint)
+                            .foregroundColor(.appErrorText)
+                            .padding(.horizontal, 24)
+                    }
+                    
                     Button("Reset Password") {
-                        onResetComplete()
+                        updateError = nil
+                        guard viewModel.password.count >= 4, viewModel.password.count <= 15, !email.isEmpty else { return }
+                        Task { await updatePassword() }
                     }
                     .font(.appButton)
                     .foregroundColor(.white)
@@ -94,18 +106,36 @@ struct SetNewPasswordView: View {
                     .padding(.vertical, 16)
                     .background(Color.appPrimaryDark)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .disabled(viewModel.password.count < 4 || viewModel.password.count > 15)
-                    .opacity(viewModel.password.count >= 4 && viewModel.password.count <= 15 ? 1 : 0.6)
+                    .disabled(viewModel.password.count < 4 || viewModel.password.count > 15 || email.isEmpty || isUpdating)
+                    .opacity(viewModel.password.count >= 4 && viewModel.password.count <= 15 && !email.isEmpty && !isUpdating ? 1 : 0.6)
                     .padding(.horizontal, 24)
                 }
                 .padding(.vertical, 24)
             }
         }
     }
+    
+    private func updatePassword() async {
+        isUpdating = true
+        defer { isUpdating = false }
+        let endpoint = APIEndpoint.updatePassword(email: email, newpassword: viewModel.password)
+        do {
+            let response: MessageResponse = try await APIService.shared.request(endpoint)
+            let ok = response.success ?? response.status ?? false
+            let msg = (response.message ?? "").lowercased()
+            if ok || msg.contains("success") {
+                await MainActor.run { onResetComplete() }
+            } else {
+                await MainActor.run { updateError = response.message ?? "Failed to update password" }
+            }
+        } catch {
+            await MainActor.run { updateError = error.localizedDescription }
+        }
+    }
 }
 
 struct SetNewPasswordView_Previews: PreviewProvider {
     static var previews: some View {
-        SetNewPasswordView(onBack: {}, onResetComplete: {})
+        SetNewPasswordView(email: "user@example.com", onBack: {}, onResetComplete: {})
     }
 }

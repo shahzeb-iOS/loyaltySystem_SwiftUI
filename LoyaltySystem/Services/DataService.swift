@@ -14,9 +14,11 @@ final class DataService: ObservableObject {
     @Published var services: [ServiceItem] = []
     @Published var promotions: [PromotionItem] = []
     @Published var appointments: [AppointmentItem] = []
+    @Published var tiers: [TierItem] = []
     @Published var isLoadingServices = false
     @Published var isLoadingPromotions = false
     @Published var isLoadingAppointments = false
+    @Published var isLoadingTiers = false
     
     private init() {}
     
@@ -59,6 +61,20 @@ final class DataService: ObservableObject {
         } catch {
             print("[DataService] getUserAppointments error: \(error.localizedDescription)")
             appointments = []
+        }
+    }
+    
+    func fetchTiers() async {
+        isLoadingTiers = true
+        defer { isLoadingTiers = false }
+        
+        let endpoint = APIEndpoint.getTiers
+        do {
+            let response: GetTiersResponse = try await APIService.shared.request(endpoint)
+            tiers = response.tiers ?? []
+        } catch {
+            print("[DataService] getTiers error: \(error.localizedDescription)")
+            tiers = []
         }
     }
 }

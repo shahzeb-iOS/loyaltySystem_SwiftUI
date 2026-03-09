@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct LoyaltyArchitectureView: View {
+    @ObservedObject var dataService: DataService
     let onBack: () -> Void
     let onContinue: () -> Void
     
@@ -25,6 +26,12 @@ struct LoyaltyArchitectureView: View {
             
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
+                    if dataService.isLoadingTiers && dataService.tiers.isEmpty {
+                        ProgressView()
+                            .padding(.vertical, 40)
+                    } else if !dataService.tiers.isEmpty {
+                        tiersFromAPISection
+                    }
                     tierCard
                     privilegesSection
                 }
@@ -36,6 +43,62 @@ struct LoyaltyArchitectureView: View {
             continueButton
         }
         .background(Color.appBackgroundWhite)
+        .task {
+            await dataService.fetchTiers()
+        }
+    }
+    
+    private var tiersFromAPISection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Tiers")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(.black)
+            ForEach(Array(dataService.tiers.enumerated()), id: \.offset) { _, tier in
+                tierCardFromAPI(tier)
+            }
+        }
+        .padding(.bottom, 24)
+    }
+    
+    private func tierCardFromAPI(_ tier: TierItem) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(tier.name ?? "Tier")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.black)
+                if let pts = tier.pointsRequired {
+                    Text("\(pts) PTS")
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(.appAccentGold)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.appAccentGold.opacity(0.25))
+                        .clipShape(Capsule())
+                }
+                Spacer()
+            }
+            if let desc = tier.description, !desc.isEmpty {
+                Text(desc)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(.appTextSecondary)
+            }
+            if let benefits = tier.benefits, !benefits.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(benefits, id: \.self) { b in
+                        Text("• \(b)")
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundColor(.appTextSecondary)
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(Color.appBackgroundWhite)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.appTextSecondary.opacity(0.08), lineWidth: 1)
+        )
     }
     
     private var header: some View {
@@ -155,6 +218,6 @@ struct LoyaltyArchitectureView: View {
 
 struct LoyaltyArchitectureView_Previews: PreviewProvider {
     static var previews: some View {
-        LoyaltyArchitectureView(onBack: {}, onContinue: {})
+        LoyaltyArchitectureView(dataService: .shared, onBack: {}, onContinue: {})
     }
 }

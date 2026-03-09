@@ -67,6 +67,7 @@ struct HomeView: View {
         }
         .fullScreenCover(isPresented: $showLoyaltyArchitecture) {
             LoyaltyArchitectureView(
+                dataService: dataService,
                 onBack: { showLoyaltyArchitecture = false },
                 onContinue: { showLoyaltyArchitecture = false }
             )
@@ -163,7 +164,7 @@ struct HomeView: View {
                         .foregroundColor(.appTextSecondary)
                 }
                 
-                Button("REDEEM") {
+                Button("getTiers") {
                     showLoyaltyArchitecture = true
                 }
                 .font(.system(size: 9, weight: .semibold))
