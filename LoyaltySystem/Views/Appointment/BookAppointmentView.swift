@@ -8,10 +8,9 @@
 import SwiftUI
 
 struct BookAppointmentView: View {
+    @Binding var selectedBranch: String
     let onBack: () -> Void
     let onContinue: () -> Void
-    
-    @State private var selectedBranch: String? = "San Jerónimo"
     
     var body: some View {
         VStack(spacing: 0) {
@@ -77,6 +76,9 @@ struct BookAppointmentView: View {
                 branchOption("Carretera Nacional", isSelected: selectedBranch == "Carretera Nacional") {
                     selectedBranch = "Carretera Nacional"
                 }
+                branchOption("Downtown Clinic", isSelected: selectedBranch == "Downtown Clinic") {
+                    selectedBranch = "Downtown Clinic"
+                }
             }
         }
         .padding(.horizontal, 20)
@@ -130,6 +132,6 @@ struct BookAppointmentView: View {
 
 struct BookAppointmentView_Previews: PreviewProvider {
     static var previews: some View {
-        BookAppointmentView(onBack: {}, onContinue: {})
+        BookAppointmentView(selectedBranch: .constant("San Jerónimo"), onBack: {}, onContinue: {})
     }
 }

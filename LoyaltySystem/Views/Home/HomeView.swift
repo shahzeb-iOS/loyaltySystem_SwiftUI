@@ -12,8 +12,15 @@ struct HomeView: View {
     @ObservedObject var dataService: DataService
     @State private var showBookAppointment = false
     @State private var showCatalog = false
+    @State private var openCatalogOnPromotions = false
     @State private var showNotifications = false
     @State private var showLoyaltyArchitecture = false
+    @State private var showErrorAlert = false
+    
+    private var isHomeLoading: Bool {
+        dataService.isLoadingTiers || dataService.isLoadingDashboard || dataService.isLoadingServices
+            || dataService.isLoadingPromotions || dataService.isLoadingAppointments
+    }
     
     init(loggedInUser: LoggedInUser, dataService: DataService = .shared) {
         self.loggedInUser = loggedInUser
@@ -21,46 +28,71 @@ struct HomeView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            navigationBar
-            
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 0) {
-                    // Header
-                    headerSection
+        ZStack {
+            VStack(spacing: 0) {
+                navigationBar
+                
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        // Header
+                        headerSection
+                            .padding(.bottom, 24)
+                    
+                    // Loyalty Tiers Section
+                    loyaltyTiersSection
                         .padding(.bottom, 24)
-                
-                // Loyalty Tiers Section
-                loyaltyTiersSection
-                    .padding(.bottom, 24)
-                
-                // Quick Actions
-                quickActionsSection
-                    .padding(.bottom, 24)
-                
-                // Next Appointment
-                nextAppointmentSection
-                    .padding(.bottom, 24)
-                
-                // Promotions
-                promotionsSection
-                    .padding(.bottom, 100)
+                    
+                    // Quick Actions
+                    quickActionsSection
+                        .padding(.bottom, 24)
+                    
+                    // Next Appointment
+                    nextAppointmentSection
+                        .padding(.bottom, 24)
+                    
+                    // Promotions
+                    promotionsSection
+                        .padding(.bottom, 100)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
+            }
+            .background(Color.appBackgroundWhite)
+            
+            if isHomeLoading {
+                Color.appBackgroundWhite.opacity(0.7)
+                    .ignoresSafeArea()
+                SpinnerOverlayView(tint: Color.appPrimaryDark)
             }
         }
-        .background(Color.appBackgroundWhite)
         .task {
+            dataService.clearLastError()
+            await dataService.fetchTiers()
+            await dataService.fetchDashboard(userId: loggedInUser.id)
             await dataService.fetchAllServices()
             await dataService.fetchPromotions()
-            await dataService.fetchUserAppointments(userId: loggedInUser.id)
+            await dataService.fetchUserAppointments(userId: loggedInUser.id, status: "A")
+        }
+        .onChange(of: dataService.lastErrorMessage) { newValue in
+            showErrorAlert = (newValue != nil && !(newValue ?? "").isEmpty)
+        }
+        .alert("Error", isPresented: $showErrorAlert) {
+            Button("OK") {
+                dataService.clearLastError()
+                showErrorAlert = false
+            }
+        } message: {
+            Text(dataService.lastErrorMessage ?? "Something went wrong.")
         }
         .fullScreenCover(isPresented: $showBookAppointment) {
-            BookAppointmentFlowView(onDismiss: { showBookAppointment = false })
+            BookAppointmentFlowView(userId: loggedInUser.id, dataService: dataService, onDismiss: { showBookAppointment = false })
         }
         .fullScreenCover(isPresented: $showCatalog) {
-            CatalogView(dataService: dataService, onBack: { showCatalog = false })
+            CatalogView(dataService: dataService, userId: loggedInUser.id, initialTab: openCatalogOnPromotions ? .promotions : nil, onBack: {
+                showCatalog = false
+                openCatalogOnPromotions = false
+            })
         }
         .fullScreenCover(isPresented: $showNotifications) {
             NotificationsView(onDismiss: { showNotifications = false })
@@ -121,7 +153,7 @@ struct HomeView: View {
                 
                 Spacer()
                 
-                Text("Gold Member")
+                Text(dataService.dashboardTierName ?? "Gold Member")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.appGoldMemberText)
                     .padding(.horizontal, 12)
@@ -136,43 +168,65 @@ struct HomeView: View {
             
             Spacer().frame(height: 3)
             
-            Text("1250")
+            Text("\(dataService.dashboardPoints ?? 0)")
                 .font(.appPointsValue)
                 .foregroundColor(.appAccentGold)
                 .padding(.bottom, 5)
             
-            HStack(alignment: .bottom, spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 5) {
                     Text("Tier Progress")
                         .font(.appPointsLabel)
                         .foregroundColor(.appTextSecondary)
                     
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.white)
-                            .frame(height: 6)
-                        
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.appAccentGold)
-                            .frame(width: 120, height: 6)
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.white)
+                                .frame(height: 6)
+                            
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.appAccentGold)
+                                .frame(width: max(0, geo.size.width * tierProgressFraction), height: 6)
+                        }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: .infinity)
                     .frame(height: 6)
                     
-                    Text("750 points until Platinum")
+                    Text(tierProgressSubtitle)
                         .font(.appGreetingSubtitle)
                         .foregroundColor(.appTextSecondary)
                 }
                 
-                Button("getTiers") {
-                    showLoyaltyArchitecture = true
+                HStack(spacing: 10) {
+                    Button(action: { openCatalogOnPromotions = false; showCatalog = true }) {
+                        Text("Redeem")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.appPrimaryDark)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .frame(height: 28)
+                            .padding(.horizontal, 14)
+                            .background(Color.appAccentGold)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                    .fixedSize(horizontal: true, vertical: false)
+                    
+                    Button(action: { showLoyaltyArchitecture = true }) {
+                        Text("View Tiers")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .frame(height: 28)
+                            .padding(.horizontal, 14)
+                            .background(Color.appAccentGold)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                    .fixedSize(horizontal: true, vertical: false)
                 }
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(height: 26)
-                .padding(.horizontal, 16)
-                .background(Color.appAccentGold)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }
         .padding(.horizontal, 20)
@@ -194,7 +248,7 @@ struct HomeView: View {
             quickActionCard(
                 icon: "square.grid.2x2",
                 title: "Catalog",
-                action: { showCatalog = true }
+                action: { openCatalogOnPromotions = false; showCatalog = true }
             )
             .frame(maxWidth: .infinity)
         }
@@ -234,15 +288,39 @@ struct HomeView: View {
     }
     
     private var nextAppointmentCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let serviceName: String
+        let location: String
+        let dateStr: String
+        let timeStr: String
+        let statusStr: String
+        if let next = dataService.nextAppointment {
+            serviceName = next.serviceName ?? "—"
+            location = next.location ?? next.branchName ?? "—"
+            dateStr = next.date ?? "—"
+            timeStr = next.time ?? "—"
+            statusStr = next.status ?? "Confirmed"
+        } else if let first = dataService.appointments.first {
+            serviceName = first.serviceName ?? "—"
+            location = first.location ?? "—"
+            dateStr = first.date ?? "—"
+            timeStr = first.time ?? "—"
+            statusStr = first.status ?? "Confirmed"
+        } else {
+            serviceName = "—"
+            location = "—"
+            dateStr = "—"
+            timeStr = "—"
+            statusStr = "Confirmed"
+        }
+        return VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Classic Facial")
+                Text(serviceName)
                     .font(.appSectionHeader)
                     .foregroundColor(.black)
                 
                 Spacer()
                 
-                Text("Confirmed")
+                Text(statusStr)
                     .font(.appCaption)
                     .foregroundColor(.appTextPrimary)
                     .padding(.horizontal, 10)
@@ -255,7 +333,7 @@ struct HomeView: View {
                 Image(systemName: "mappin")
                     .font(.system(size: 12))
                     .foregroundColor(.appTextSecondary)
-                Text("Lahore Spa")
+                Text(location)
                     .font(.appBody)
                     .foregroundColor(.appTextSecondary)
             }
@@ -265,7 +343,7 @@ struct HomeView: View {
                     Image(systemName: "calendar")
                         .font(.system(size: 14))
                         .foregroundColor(.appTextPrimary)
-                    Text("Feb 14, 2026")
+                    Text(dateStr)
                         .font(.appBody)
                         .foregroundColor(.black)
                 }
@@ -274,7 +352,7 @@ struct HomeView: View {
                     Image(systemName: "clock")
                         .font(.system(size: 14))
                         .foregroundColor(.appTextPrimary)
-                    Text("10:00 AM")
+                    Text(timeStr)
                         .font(.appBody)
                         .foregroundColor(.black)
                 }
@@ -291,7 +369,10 @@ struct HomeView: View {
     
     private var promotionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader(title: "Promotions", seeAllAction: {})
+            sectionHeader(title: "Promotions", seeAllAction: {
+                openCatalogOnPromotions = true
+                showCatalog = true
+            })
             
             promotionCard
         }
@@ -344,6 +425,22 @@ struct HomeView: View {
         .frame(height: 120)
         .background(Color.appPrimaryDark)
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+    
+    /// Progress bar fill: (currentSpending / nextTierSpending) * 100, capped at 1.0
+    private var tierProgressFraction: CGFloat {
+        let cur = dataService.currentSpending ?? dataService.dashboardPoints ?? 0
+        guard let next = dataService.nextTierSpending, next > 0 else { return 0 }
+        let fraction = Double(cur) / Double(next)
+        return min(1.0, max(0, CGFloat(fraction)))
+    }
+    
+    private var tierProgressSubtitle: String {
+        let cur = dataService.currentSpending ?? dataService.dashboardPoints ?? 0
+        guard let next = dataService.nextTierSpending, next > cur else {
+            return "Max tier reached"
+        }
+        return "\(next - cur) points until next tier"
     }
     
     private func sectionHeader(title: String, seeAllAction: @escaping () -> Void) -> some View {

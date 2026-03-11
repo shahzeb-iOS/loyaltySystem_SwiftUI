@@ -14,30 +14,31 @@ enum CatalogTab: String, CaseIterable {
 
 struct CatalogView: View {
     @ObservedObject var dataService: DataService
+    let userId: String
+    let initialTab: CatalogTab?
     let onBack: () -> Void
     
     @State private var selectedTab: CatalogTab = .all
+    @State private var redeemError: String?
+    @State private var showRedeemError = false
+    @State private var showApiErrorAlert = false
     
-    init(dataService: DataService = .shared, onBack: @escaping () -> Void) {
+    init(dataService: DataService = .shared, userId: String = "1", initialTab: CatalogTab? = nil, onBack: @escaping () -> Void) {
         self._dataService = ObservedObject(wrappedValue: dataService)
+        self.userId = userId
+        self.initialTab = initialTab
         self.onBack = onBack
     }
     
     private var catalogItems: [CatalogItem] {
-        let serviceItems = dataService.services.map { CatalogItem.from($0) }
-        let items = serviceItems.isEmpty ? fallbackItems : serviceItems
-        return items
+        dataService.services.map { CatalogItem.from($0) }
     }
     
-    private var fallbackItems: [CatalogItem] {
-        [
-            CatalogItem(title: "Hydra Facial", duration: "30 Min", price: "$40", points: 50, discount: "50% off", imageName: "face.smiling"),
-            CatalogItem(title: "Skin care kit", duration: nil, price: "$40", points: 100, discount: "10% off", imageName: "gift.fill"),
-            CatalogItem(title: "Classic Facial", duration: "30 Min", price: "$40", points: 200, discount: "50% off", imageName: "sparkles")
-        ]
-    }
+    private var pointsBalance: Int { dataService.dashboardPoints ?? 0 }
     
-    private let pointsBalance = 1250
+    private var isCatalogLoading: Bool {
+        dataService.isLoadingDashboard || dataService.isLoadingServices || dataService.isLoadingPromotions
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -47,20 +48,56 @@ struct CatalogView: View {
                 .padding(.top, 20)
                 .padding(.bottom, 16)
             
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: 16) {
-                    ForEach(filteredItems) { item in
-                        catalogCard(item)
+            ZStack(alignment: .top) {
+                if isCatalogLoading {
+                    SpinnerOverlayView(tint: Color.appPrimaryDark)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if filteredItems.isEmpty {
+                    Text("No data found")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.appTextSecondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView(.vertical, showsIndicators: false) {
+                        LazyVStack(spacing: 16) {
+                            ForEach(filteredItems) { item in
+                                catalogCard(item)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 100)
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 100)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color.appBackgroundWhite)
         .task {
+            dataService.clearLastError()
+            await dataService.fetchDashboard(userId: userId)
             await dataService.fetchAllServices()
             await dataService.fetchPromotions()
+        }
+        .onAppear {
+            if let tab = initialTab {
+                selectedTab = tab
+            }
+        }
+        .onChange(of: dataService.lastErrorMessage) { newValue in
+            showApiErrorAlert = (newValue != nil && !(newValue ?? "").isEmpty)
+        }
+        .alert("Error", isPresented: $showApiErrorAlert) {
+            Button("OK") {
+                dataService.clearLastError()
+                showApiErrorAlert = false
+            }
+        } message: {
+            Text(dataService.lastErrorMessage ?? "Something went wrong.")
+        }
+        .alert("Redeem Failed", isPresented: $showRedeemError) {
+            Button("OK", role: .cancel) { showRedeemError = false }
+        } message: {
+            Text(redeemError ?? "Something went wrong.")
         }
     }
     
@@ -183,17 +220,21 @@ struct CatalogView: View {
                         .foregroundColor(.appAccentGold)
                 }
                 
-                // Redeem button
-                Button(action: {}) {
-                    Text("Redeem")
-                        .font(.system(size: 14, weight: .regular))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.appPrimaryDark)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                // Redeem button (calls redeemPoints API)
+                Button(action: { redeemPoints(for: item) }) {
+                    HStack {
+                        if dataService.isRedeemingPoints { ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white)) }
+                        Text(dataService.isRedeemingPoints ? "Redeeming..." : "Redeem")
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundColor(.white)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.appPrimaryDark)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
                 .buttonStyle(.plain)
+                .disabled(dataService.isRedeemingPoints || (dataService.dashboardPoints ?? 0) < item.points)
             }
         }
         .padding(.horizontal, 20)
@@ -206,10 +247,24 @@ struct CatalogView: View {
         )
         .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 2)
     }
+    
+    private func redeemPoints(for item: CatalogItem) {
+        Task {
+            do {
+                try await dataService.redeemPoints(userId: userId, points: item.points)
+                await dataService.fetchDashboard(userId: userId)
+            } catch {
+                await MainActor.run {
+                    redeemError = error.localizedDescription
+                    showRedeemError = true
+                }
+            }
+        }
+    }
 }
 
 struct CatalogView_Previews: PreviewProvider {
     static var previews: some View {
-        CatalogView(dataService: .shared, onBack: {})
+        CatalogView(dataService: .shared, userId: "1", onBack: {})
     }
 }

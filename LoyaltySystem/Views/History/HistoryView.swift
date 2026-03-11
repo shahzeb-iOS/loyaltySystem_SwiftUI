@@ -19,6 +19,7 @@ struct HistoryView: View {
     let onBack: () -> Void
     
     @State private var selectedFilter: HistoryFilter = .all
+    @State private var showErrorAlert = false
     
     init(userId: String = "1", dataService: DataService = .shared, onBack: @escaping () -> Void) {
         self.userId = userId
@@ -27,15 +28,7 @@ struct HistoryView: View {
     }
     
     private var historyEntries: [HistoryEntry] {
-        let entries = dataService.appointments.map { HistoryEntry.from($0) }
-        return entries.isEmpty ? fallbackEntries : entries
-    }
-    
-    private var fallbackEntries: [HistoryEntry] {
-        [
-            HistoryEntry(serviceName: "Classic Facial", location: "Lahore Spa", status: .upcoming, date: "Feb 14, 2026", time: "10:00 AM", points: 10),
-            HistoryEntry(serviceName: "Classic Facial", location: "Lahore Spa", status: .completed, date: "Feb 10, 2026", time: "11:00 AM", points: 10)
-        ]
+        dataService.appointments.map { HistoryEntry.from($0) }
     }
     
     private var filteredEntries: [HistoryEntry] {
@@ -54,19 +47,50 @@ struct HistoryView: View {
                 .padding(.top, 20)
                 .padding(.bottom, 16)
             
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: 16) {
-                    ForEach(filteredEntries) { entry in
-                        historyCard(entry)
+            ZStack(alignment: .top) {
+                if dataService.isLoadingAppointments {
+                    SpinnerOverlayView(tint: Color.appPrimaryDark)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if filteredEntries.isEmpty {
+                    Text("No data found")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.appTextSecondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView(.vertical, showsIndicators: false) {
+                        LazyVStack(spacing: 16) {
+                            ForEach(filteredEntries) { entry in
+                                historyCard(entry)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 100)
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 100)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color.appBackgroundWhite)
-        .task {
-            await dataService.fetchUserAppointments(userId: userId)
+        .task(id: selectedFilter) {
+            dataService.clearLastError()
+            let status: String
+            switch selectedFilter {
+            case .all: status = "A"
+            case .upcoming: status = "U"
+            case .past: status = "P"
+            }
+            await dataService.fetchUserAppointments(userId: userId, status: status)
+        }
+        .onChange(of: dataService.lastErrorMessage) { newValue in
+            showErrorAlert = (newValue != nil && !(newValue ?? "").isEmpty)
+        }
+        .alert("Error", isPresented: $showErrorAlert) {
+            Button("OK") {
+                dataService.clearLastError()
+                showErrorAlert = false
+            }
+        } message: {
+            Text(dataService.lastErrorMessage ?? "Something went wrong.")
         }
     }
     

@@ -11,6 +11,7 @@ struct LoyaltyArchitectureView: View {
     @ObservedObject var dataService: DataService
     let onBack: () -> Void
     let onContinue: () -> Void
+    @State private var showErrorAlert = false
     
     private let privileges = [
         "1 complimentary facial analysis",
@@ -24,27 +25,52 @@ struct LoyaltyArchitectureView: View {
         VStack(spacing: 0) {
             header
             
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
-                    if dataService.isLoadingTiers && dataService.tiers.isEmpty {
-                        ProgressView()
-                            .padding(.vertical, 40)
-                    } else if !dataService.tiers.isEmpty {
-                        tiersFromAPISection
+            ZStack(alignment: .top) {
+                if dataService.isLoadingTiers {
+                    SpinnerOverlayView(tint: Color.appPrimaryDark)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if dataService.tiers.isEmpty {
+                    Text("No data found")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.appTextSecondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 0) {
+                            tiersFromAPISection
+                            tierCard
+                            privilegesSection
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 24)
+                        .padding(.bottom, 100)
                     }
-                    tierCard
-                    privilegesSection
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 24)
-                .padding(.bottom, 100)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             
             continueButton
         }
         .background(Color.appBackgroundWhite)
         .task {
+            dataService.clearLastError()
             await dataService.fetchTiers()
+        }
+        .onAppear {
+            if dataService.tiers.isEmpty && !dataService.isLoadingTiers {
+                Task { await dataService.fetchTiers() }
+            }
+        }
+        .onChange(of: dataService.lastErrorMessage) { newValue in
+            showErrorAlert = (newValue != nil && !(newValue ?? "").isEmpty)
+        }
+        .alert("Error", isPresented: $showErrorAlert) {
+            Button("OK") {
+                dataService.clearLastError()
+                showErrorAlert = false
+            }
+        } message: {
+            Text(dataService.lastErrorMessage ?? "Something went wrong.")
         }
     }
     

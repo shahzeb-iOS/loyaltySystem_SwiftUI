@@ -11,6 +11,19 @@ struct GetTiersResponse: Decodable {
     let status: Bool?
     let message: String?
     let tiers: [TierItem]?
+    
+    enum CodingKeys: String, CodingKey {
+        case status, message, tiers, data
+    }
+    
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        status = try c.decodeIfPresent(Bool.self, forKey: .status)
+        message = try c.decodeIfPresent(String.self, forKey: .message)
+        let tiersArray = try c.decodeIfPresent([TierItem].self, forKey: .tiers)
+        let dataArray = try c.decodeIfPresent([TierItem].self, forKey: .data)
+        tiers = tiersArray ?? dataArray
+    }
 }
 
 struct TierItem: Decodable, Identifiable {

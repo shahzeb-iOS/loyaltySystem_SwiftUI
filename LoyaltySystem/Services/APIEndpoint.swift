@@ -24,6 +24,9 @@ enum APIEndpoint {
     case sendOTP(email: String)
     case verifyOtp(email: String, otp: String)
     case updatePassword(email: String, newpassword: String)
+    case bookAppointment(branchName: String, serviceId: String, userId: String, date: String, time: String)
+    case getDashboard(userId: String)
+    case redeemPoints(userId: String, points: Int)
     
     var path: String {
         switch self {
@@ -36,21 +39,25 @@ enum APIEndpoint {
         case .sendOTP: return "/sendOtp"
         case .verifyOtp: return "/verifyOtp"
         case .updatePassword: return "/updatePassword"
+        case .bookAppointment: return "/bookAppointment"
+        case .getDashboard: return "/getDashboard"
+        case .redeemPoints: return "/redeemPoints"
         }
     }
     
     var method: HTTPMethod {
         switch self {
-        case .login, .createAccount, .getUserAppointments, .sendOTP, .verifyOtp, .updatePassword: return .post
+        case .login, .createAccount, .getUserAppointments, .sendOTP, .verifyOtp, .updatePassword,
+             .bookAppointment, .getDashboard, .redeemPoints: return .post
         case .getPromotions, .getAllServices, .getTiers: return .get
         }
     }
     
-    /// Endpoints that use Authorization: Login@123 (getTiers) or Login@1234 (auth flows)
+    /// Endpoints that use Authorization: Login@123 (getTiers, bookAppointment, getDashboard, redeemPoints, getUserAppointments) or auth flows
     var authorizationHeader: String? {
         let raw: String?
         switch self {
-        case .getTiers: raw = APIConfig.authTokenGetTiers
+        case .getTiers, .getUserAppointments, .bookAppointment, .getDashboard, .redeemPoints: raw = APIConfig.authTokenGetTiers
         case .sendOTP, .verifyOtp, .updatePassword: raw = APIConfig.authTokenAuth
         default: raw = nil
         }
@@ -84,6 +91,24 @@ enum APIEndpoint {
             let params: [String: Any] = [
                 "userid": userId,
                 "status": status
+            ]
+            return try? JSONSerialization.data(withJSONObject: params)
+        case .bookAppointment(let branchName, let serviceId, let userId, let date, let time):
+            let params: [String: Any] = [
+                "branchName": branchName,
+                "serviceId": serviceId,
+                "userid": userId,
+                "date": date,
+                "time": time
+            ]
+            return try? JSONSerialization.data(withJSONObject: params)
+        case .getDashboard(let userId):
+            let params: [String: Any] = ["userid": Int(userId) ?? 1]
+            return try? JSONSerialization.data(withJSONObject: params)
+        case .redeemPoints(let userId, let points):
+            let params: [String: Any] = [
+                "userid": Int(userId) ?? 1,
+                "points": points
             ]
             return try? JSONSerialization.data(withJSONObject: params)
         case .sendOTP(let email):

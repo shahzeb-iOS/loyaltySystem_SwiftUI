@@ -313,6 +313,7 @@ struct SignUpView: View {
                 CustomCalendarOverlay(
                     selectedDate: $viewModel.dateOfBirth,
                     hasSelectedDate: $viewModel.hasSelectedDOB,
+                    mode: .pastOnly,
                     onDismiss: { showDatePicker = false }
                 )
                 .padding(.top, 200)
