@@ -2,28 +2,33 @@
 //  LoginResponse.swift
 //  LoyaltySystem
 //
-//  Login API response model - flexible for various response structures
+//  Login API response – matches: {"status":true,"message":"...","user":{...}}
 //
 
 import Foundation
 
 struct LoginResponse: Decodable {
-    let success: Bool?
+    let status: Bool?
     let message: String?
-    let data: LoginData?
-    let token: String?
-    let user: UserData?
-}
-
-struct LoginData: Decodable {
-    let token: String?
     let user: UserData?
 }
 
 struct UserData: Decodable {
     let id: Int?
-    let name: String?
     let fullName: String?
     let email: String?
+    let password: String?
     let phone: String?
+    let dob: String?
+    let earnedPoints: Int?
+    let remainingPoints: Int?
+    let redeemedPoints: Int?
+    let isAccountActive: Int?
+    let fcmToken: String?
+    let membership: String?
+    let loyalityID: String?
+    let userType: String?
+    
+    /// For display – API sends fullName
+    var name: String? { fullName }
 }

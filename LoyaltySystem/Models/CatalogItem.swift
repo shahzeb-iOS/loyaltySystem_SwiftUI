@@ -42,7 +42,7 @@ struct CatalogItem: Identifiable {
     }
     
     static func from(_ promo: PromotionItem) -> CatalogItem {
-        let priceVal = promo.price ?? promo.discountedPrice ?? 0
+        let priceVal = promo.isActive ?? promo.offPercentage ?? 0
         let discount = (promo.offPercentage ?? 0) > 0 ? "\(promo.offPercentage ?? 0)% off" : "0% off"
         return CatalogItem(
             id: promo.id ?? Int.random(in: 1...99999),

@@ -20,28 +20,42 @@ struct MainTabView: View {
     let onLogout: () -> Void
     @StateObject private var dataService = DataService.shared
     @State private var selectedTab: MainTab = .home
+    @State private var hasLoadedHomeOnce = false
+    @State private var isRefreshingHome = false
+    
+    private var showHomeLoader: Bool {
+        isRefreshingHome || dataService.isLoadingDashboard || dataService.isLoadingServices
+            || dataService.isLoadingPromotions || dataService.isLoadingAppointments
+    }
     
     var body: some View {
-        VStack(spacing: 0) {
-            Group {
-                switch selectedTab {
-                case .home:
-                    HomeView(loggedInUser: loggedInUser, dataService: dataService)
-                case .rewards:
-                    RewardsPlaceholderView()
-                case .center:
-                    HomeView(loggedInUser: loggedInUser, dataService: dataService)
-                case .history:
-                    HistoryView(userId: loggedInUser.id, dataService: dataService, onBack: { selectedTab = .home })
-                case .profile:
-                    ProfileView(loggedInUser: loggedInUser, onBack: { selectedTab = .home }, onSignOut: onLogout)
+        ZStack {
+            VStack(spacing: 0) {
+                Group {
+                    switch selectedTab {
+                    case .home:
+                        HomeView(loggedInUser: loggedInUser, dataService: dataService, hasLoadedOnce: $hasLoadedHomeOnce, isRefreshingHome: $isRefreshingHome)
+                    case .rewards:
+                        RewardsPlaceholderView()
+                    case .center:
+                        HomeView(loggedInUser: loggedInUser, dataService: dataService, hasLoadedOnce: $hasLoadedHomeOnce, isRefreshingHome: $isRefreshingHome)
+                    case .history:
+                        HistoryView(userId: loggedInUser.id, dataService: dataService, onBack: { selectedTab = .home })
+                    case .profile:
+                        ProfileView(loggedInUser: loggedInUser, onBack: { selectedTab = .home }, onSignOut: onLogout)
+                    }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+                tabBar
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .ignoresSafeArea(.keyboard)
             
-            tabBar
+            if showHomeLoader {
+                LoadingOverlay()
+                    .ignoresSafeArea()
+            }
         }
-        .ignoresSafeArea(.keyboard)
     }
     
     private var tabBar: some View {

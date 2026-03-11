@@ -95,7 +95,7 @@ final class DataService: ObservableObject {
         }
     }
     
-    /// getDashboard – used on Home (dashboard). Populates dashboardPoints, dashboardTierName, nextAppointment.
+    /// getDashboard – used on Home (dashboard). Populates from response.data: totalSpendings, points, userTier, upcomingAppointment.
     func fetchDashboard(userId: String) async {
         isLoadingDashboard = true
         defer { isLoadingDashboard = false }
@@ -103,16 +103,27 @@ final class DataService: ObservableObject {
         let endpoint = APIEndpoint.getDashboard(userId: userId)
         do {
             let response: GetDashboardResponse = try await APIService.shared.request(endpoint)
-            dashboardPoints = response.points
-            dashboardTierName = response.tierName
-            nextAppointment = response.nextAppointment
-            currentSpending = response.currentSpending ?? response.points
-            nextTierSpending = response.nextTierSpending
-            if let appointments = response.appointments, !appointments.isEmpty {
-                self.appointments = appointments
+            let data = response.data
+            dashboardPoints = data?.points
+            dashboardTierName = data?.userTier?.currentTier
+            currentSpending = data?.totalSpendings ?? data?.points
+            nextTierSpending = data?.userTier?.nextTierSpendings.flatMap { Int($0) }
+            if nextTierSpending == nil, let cur = data?.totalSpendings {
+                nextTierSpending = nextTierPointsRequired(currentPoints: cur)
             }
-            if nextTierSpending == nil, let points = response.points {
-                nextTierSpending = nextTierPointsRequired(currentPoints: points)
+            if let up = data?.upcomingAppointment {
+                nextAppointment = DashboardAppointmentItem(
+                    id: up.id,
+                    serviceName: up.title,
+                    location: up.branchName,
+                    branchName: up.branchName,
+                    status: nil,
+                    date: up.date,
+                    time: up.time,
+                    points: nil
+                )
+            } else {
+                nextAppointment = nil
             }
         } catch {
             print("[DataService] getDashboard error: \(error.localizedDescription)")

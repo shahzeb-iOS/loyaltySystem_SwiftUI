@@ -2,7 +2,7 @@
 //  PromotionsResponse.swift
 //  LoyaltySystem
 //
-//  getPromotions API response
+//  getPromotions API – matches: {"status":true,"message":"...","promotions":[...]}
 //
 
 import Foundation
@@ -15,11 +15,14 @@ struct PromotionsResponse: Decodable {
 
 struct PromotionItem: Decodable, Identifiable {
     let id: Int?
+    let imagePath: String?
+    let isActive: Int?
+    let startDate: String?
+    let endDate: String?
     let title: String?
-    let details: String?
-    let image: String?
     let points: Int?
     let offPercentage: Int?
-    let price: Int?
-    let discountedPrice: Int?
+    
+    /// For UI that expects image URL
+    var image: String? { imagePath }
 }

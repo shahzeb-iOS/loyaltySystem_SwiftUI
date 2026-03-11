@@ -32,21 +32,15 @@ struct SpinnerOverlayView: View {
     }
 }
 
+/// Full-view overlay with centered gold spinner only (no text)
 struct LoadingOverlay: View {
     var body: some View {
         ZStack {
             Color.black.opacity(0.4)
                 .ignoresSafeArea()
-            
-            VStack(spacing: 16) {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    .scaleEffect(1.5)
-                
-                Text("Loading...")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.white)
-            }
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: Color.appAccentGold))
+                .scaleEffect(1.5)
         }
     }
 }

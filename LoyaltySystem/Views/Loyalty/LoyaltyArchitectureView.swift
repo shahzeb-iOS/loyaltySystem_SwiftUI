@@ -2,7 +2,7 @@
 //  LoyaltyArchitectureView.swift
 //  LoyaltySystem
 //
-//  Loyalty tier detail - PLUS tier with member privileges
+//  Loyalty tier detail – getTiers API called here, data set in DataService
 //
 
 import SwiftUI
@@ -26,40 +26,30 @@ struct LoyaltyArchitectureView: View {
             header
             
             ZStack(alignment: .top) {
-                if dataService.isLoadingTiers {
-                    SpinnerOverlayView(tint: Color.appPrimaryDark)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if dataService.tiers.isEmpty {
-                    Text("No data found")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.appTextSecondary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 0) {
-                            tiersFromAPISection
-                            tierCard
-                            privilegesSection
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 24)
-                        .padding(.bottom, 100)
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        tierCard
+                        privilegesSection
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+                    .padding(.bottom, 100)
+                }
+                if dataService.isLoadingTiers {
+                    LoadingOverlay()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            continueButton
+            if !dataService.isLoadingTiers {
+                continueButton
+            }
         }
         .background(Color.appBackgroundWhite)
         .task {
             dataService.clearLastError()
             await dataService.fetchTiers()
-        }
-        .onAppear {
-            if dataService.tiers.isEmpty && !dataService.isLoadingTiers {
-                Task { await dataService.fetchTiers() }
-            }
         }
         .onChange(of: dataService.lastErrorMessage) { newValue in
             showErrorAlert = (newValue != nil && !(newValue ?? "").isEmpty)
@@ -72,59 +62,6 @@ struct LoyaltyArchitectureView: View {
         } message: {
             Text(dataService.lastErrorMessage ?? "Something went wrong.")
         }
-    }
-    
-    private var tiersFromAPISection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Tiers")
-                .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.black)
-            ForEach(Array(dataService.tiers.enumerated()), id: \.offset) { _, tier in
-                tierCardFromAPI(tier)
-            }
-        }
-        .padding(.bottom, 24)
-    }
-    
-    private func tierCardFromAPI(_ tier: TierItem) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(tier.name ?? "Tier")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.black)
-                if let pts = tier.pointsRequired {
-                    Text("\(pts) PTS")
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundColor(.appAccentGold)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.appAccentGold.opacity(0.25))
-                        .clipShape(Capsule())
-                }
-                Spacer()
-            }
-            if let desc = tier.description, !desc.isEmpty {
-                Text(desc)
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(.appTextSecondary)
-            }
-            if let benefits = tier.benefits, !benefits.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(benefits, id: \.self) { b in
-                        Text("• \(b)")
-                            .font(.system(size: 11, weight: .regular))
-                            .foregroundColor(.appTextSecondary)
-                    }
-                }
-            }
-        }
-        .padding(16)
-        .background(Color.appBackgroundWhite)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.appTextSecondary.opacity(0.08), lineWidth: 1)
-        )
     }
     
     private var header: some View {

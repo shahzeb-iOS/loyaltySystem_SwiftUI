@@ -2,7 +2,7 @@
 //  ServicesResponse.swift
 //  LoyaltySystem
 //
-//  getAllServices API response
+//  getAllServices API – matches: {"status":true,"message":"...","services":[...]}
 //
 
 import Foundation
@@ -23,4 +23,5 @@ struct ServiceItem: Decodable, Identifiable {
     let image: String?
     let points: Int?
     let offPercentage: Int?
+    let isActive: Int?
 }

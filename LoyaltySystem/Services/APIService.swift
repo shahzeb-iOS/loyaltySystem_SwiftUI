@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum APIError: Error {
+enum APIError: LocalizedError {
     case invalidURL
     case invalidResponse
     case httpError(statusCode: Int)
@@ -15,11 +15,11 @@ enum APIError: Error {
     case decodingError
     case networkError(Error)
     
-    var localizedDescription: String {
+    var errorDescription: String? {
         switch self {
         case .invalidURL: return "Invalid URL"
         case .invalidResponse: return "Invalid response"
-        case .httpError(let code): return "Error: \(code)"
+        case .httpError(let code): return "Server returned HTTP \(code)"
         case .serverError(let msg): return msg
         case .decodingError: return "Failed to parse response"
         case .networkError(let err): return err.localizedDescription
@@ -58,10 +58,11 @@ final class APIService {
             }
             
             let responseString = String(data: data, encoding: .utf8) ?? "<non-UTF8>"
-            print("[API Response] \(httpResponse.statusCode) \(urlString)")
+            print("[API Response] HTTP \(httpResponse.statusCode) \(urlString)")
             print("[API Response Body] \(responseString)")
             
             guard (200...299).contains(httpResponse.statusCode) else {
+                print("[API Error] HTTP \(httpResponse.statusCode) – check response body above")
                 if let errorMsg = parseErrorMessage(from: data) {
                     throw APIError.serverError(message: errorMsg)
                 }
@@ -78,7 +79,8 @@ final class APIService {
     }
     
     private func parseErrorMessage(from data: Data) -> String? {
-        (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["message"] as? String
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        return (json["message"] as? String) ?? (json["error"] as? String) ?? (json["msg"] as? String)
     }
     
     func requestRaw(_ endpoint: APIEndpoint) async throws -> (Data, HTTPURLResponse) {

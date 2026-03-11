@@ -10,6 +10,8 @@ import SwiftUI
 struct HomeView: View {
     let loggedInUser: LoggedInUser
     @ObservedObject var dataService: DataService
+    @Binding var hasLoadedOnce: Bool
+    @Binding var isRefreshingHome: Bool
     @State private var showBookAppointment = false
     @State private var showCatalog = false
     @State private var openCatalogOnPromotions = false
@@ -17,62 +19,64 @@ struct HomeView: View {
     @State private var showLoyaltyArchitecture = false
     @State private var showErrorAlert = false
     
-    private var isHomeLoading: Bool {
-        dataService.isLoadingTiers || dataService.isLoadingDashboard || dataService.isLoadingServices
-            || dataService.isLoadingPromotions || dataService.isLoadingAppointments
+    /// Loads dashboard + related data (login pe ek baar, refresh pe dubara). Tiers load on View Tiers screen only.
+    private func loadHomeData() async {
+        dataService.clearLastError()
+        await dataService.fetchDashboard(userId: loggedInUser.id)
+        await dataService.fetchAllServices()
+        await dataService.fetchPromotions()
+        await dataService.fetchUserAppointments(userId: loggedInUser.id, status: "A")
     }
     
-    init(loggedInUser: LoggedInUser, dataService: DataService = .shared) {
+    init(loggedInUser: LoggedInUser, dataService: DataService = .shared, hasLoadedOnce: Binding<Bool> = .constant(false), isRefreshingHome: Binding<Bool> = .constant(false)) {
         self.loggedInUser = loggedInUser
         self._dataService = ObservedObject(wrappedValue: dataService)
+        self._hasLoadedOnce = hasLoadedOnce
+        self._isRefreshingHome = isRefreshingHome
     }
     
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                navigationBar
+        VStack(spacing: 0) {
+            navigationBar
+            
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+                    // Header
+                    headerSection
+                        .padding(.bottom, 24)
                 
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        // Header
-                        headerSection
-                            .padding(.bottom, 24)
-                    
-                    // Loyalty Tiers Section
-                    loyaltyTiersSection
-                        .padding(.bottom, 24)
-                    
-                    // Quick Actions
-                    quickActionsSection
-                        .padding(.bottom, 24)
-                    
-                    // Next Appointment
-                    nextAppointmentSection
-                        .padding(.bottom, 24)
-                    
-                    // Promotions
-                    promotionsSection
-                        .padding(.bottom, 100)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
+                // Loyalty Tiers Section
+                loyaltyTiersSection
+                    .padding(.bottom, 24)
+                
+                // Quick Actions
+                quickActionsSection
+                    .padding(.bottom, 24)
+                
+                // Next Appointment
+                nextAppointmentSection
+                    .padding(.bottom, 24)
+                
+                // Promotions
+                promotionsSection
+                    .padding(.bottom, 100)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+            }
+            .refreshable {
+                isRefreshingHome = true
+                Task.detached(priority: .userInitiated) { @MainActor in
+                    await loadHomeData()
+                    isRefreshingHome = false
                 }
             }
-            .background(Color.appBackgroundWhite)
-            
-            if isHomeLoading {
-                Color.appBackgroundWhite.opacity(0.7)
-                    .ignoresSafeArea()
-                SpinnerOverlayView(tint: Color.appPrimaryDark)
-            }
         }
+        .background(Color.appBackgroundWhite)
         .task {
-            dataService.clearLastError()
-            await dataService.fetchTiers()
-            await dataService.fetchDashboard(userId: loggedInUser.id)
-            await dataService.fetchAllServices()
-            await dataService.fetchPromotions()
-            await dataService.fetchUserAppointments(userId: loggedInUser.id, status: "A")
+            guard !hasLoadedOnce else { return }
+            await loadHomeData()
+            hasLoadedOnce = true
         }
         .onChange(of: dataService.lastErrorMessage) { newValue in
             showErrorAlert = (newValue != nil && !(newValue ?? "").isEmpty)
@@ -147,7 +151,7 @@ struct HomeView: View {
     private var pointsBalanceCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Points Balance")
+                Text("Total Spending")
                     .font(.custom("Poppins-Regular", size: 16))
                     .foregroundColor(.appTextSecondary)
                 
@@ -168,7 +172,7 @@ struct HomeView: View {
             
             Spacer().frame(height: 3)
             
-            Text("\(dataService.dashboardPoints ?? 0)")
+            Text("\(dataService.currentSpending ?? dataService.dashboardPoints ?? 0)")
                 .font(.appPointsValue)
                 .foregroundColor(.appAccentGold)
                 .padding(.bottom, 5)

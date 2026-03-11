@@ -92,15 +92,14 @@ final class AuthViewModel: ObservableObject {
         
         do {
             let response: LoginResponse = try await APIService.shared.request(endpoint)
-            print("[Login] API Response - success: \(response.success ?? false), message: \(response.message ?? "nil")")
-            let user = response.data?.user ?? response.user
+            print("[Login] API Response - status: \(response.status ?? false), message: \(response.message ?? "nil")")
+            let user = response.user
             userDataFromAPI = user
-            userNameFromAPI = user?.name ?? email.split(separator: "@").first.map { String($0).capitalized }
+            userNameFromAPI = user?.name ?? user?.fullName ?? email.split(separator: "@").first.map { String($0).capitalized }
             userIdFromAPI = user?.id.map { String($0) }
             
-            // API may return success: false with message: "Login successful" - treat message as source of truth
             let msg = (response.message ?? "").lowercased()
-            let apiSuccess = response.success ?? false
+            let apiSuccess = response.status ?? false
             signInSuccess = apiSuccess || msg.contains("success") || msg.contains("successful")
             
             if !signInSuccess {
