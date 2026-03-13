@@ -149,13 +149,20 @@ final class DataService: ObservableObject {
         return sorted.first
     }
     
-    /// bookAppointment – used when user confirms appointment in Book Appointment flow.
-    func bookAppointment(branchName: String, serviceId: String, userId: String, date: String, time: String) async throws {
+    /// bookAppointment – used when user confirms appointment in Book Appointment flow. Returns API response for success message.
+    /// date should be dd/MM/yyyy; paymentVia e.g. "cash" or "points"
+    func bookAppointment(branchName: String, serviceId: String, userId: String, date: String, time: String, paymentVia: String) async throws -> BookAppointmentResponse {
         isBookingAppointment = true
         defer { isBookingAppointment = false }
         
-        let endpoint = APIEndpoint.bookAppointment(branchName: branchName, serviceId: serviceId, userId: userId, date: date, time: time)
-        let _: BookAppointmentResponse = try await APIService.shared.request(endpoint)
+        let endpoint = APIEndpoint.bookAppointment(branchName: branchName, serviceId: serviceId, userId: userId, date: date, time: time, paymentVia: paymentVia)
+        return try await APIService.shared.request(endpoint)
+    }
+    
+    /// deleteAccount – deletes user account. On success caller should sign out.
+    func deleteAccount(userId: String) async throws {
+        let endpoint = APIEndpoint.deleteAccount(userId: userId)
+        let _: MessageResponse = try await APIService.shared.request(endpoint)
     }
     
     /// redeemPoints – used when user taps Redeem in Catalog for a service/product.

@@ -30,11 +30,18 @@ struct BookAppointmentDateTimeView: View {
     @State private var selectedDate = Date()
     @State private var bookingError: String?
     @State private var showBookingError = false
+    @State private var showBookingSuccess = false
+    @State private var bookingSuccessMessage: String?
     @State private var showDatePicker = false
-    @State private var selectedSlot: String? = "1:00 PM"
+    @State private var selectedSlot: String? = nil
     @State private var hasSelectedDate = false
     @State private var selectedPayment: PaymentOption = .cash
     @State private var showPayWithPointsSheet = false
+    
+    /// Confirm enabled only when both date and time are selected
+    private var isConfirmEnabled: Bool {
+        hasSelectedDate && selectedSlot != nil
+    }
     
     private let timeSlots: [TimeSlot] = [
         TimeSlot(time: "9:00 AM", isEnabled: true),
@@ -250,17 +257,26 @@ struct BookAppointmentDateTimeView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(Color.appPrimaryDark)
+            .background(isConfirmEnabled ? Color.appPrimaryDark : Color.appPrimaryDark.opacity(0.5))
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
-        .disabled(dataService.isBookingAppointment)
+        .disabled(!isConfirmEnabled || dataService.isBookingAppointment)
         .padding(.horizontal, 20)
         .padding(.top, 50)
         .alert("Booking Failed", isPresented: $showBookingError) {
             Button("OK", role: .cancel) { showBookingError = false }
         } message: {
             Text(bookingError ?? "Something went wrong.")
+        }
+        .alert("Success", isPresented: $showBookingSuccess) {
+            Button("OK") {
+                showBookingSuccess = false
+                bookingSuccessMessage = nil
+                onConfirm()
+            }
+        } message: {
+            Text(bookingSuccessMessage ?? "Appointment booked successfully.")
         }
     }
     
@@ -273,15 +289,20 @@ struct BookAppointmentDateTimeView: View {
     }
     
     private func doBookingAndDismiss() {
+        guard let slot = selectedSlot else { return }
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.dateFormat = "dd/MM/yyyy"
         let dateString = dateFormatter.string(from: selectedDate)
-        let timeString = timeSlotTo24Hour(selectedSlot ?? "1:00 PM")
+        let timeString = timeSlotTo24Hour(slot)
+        let paymentViaValue = selectedPayment == .points ? "points" : "cash"
         Task {
             do {
-                try await dataService.bookAppointment(branchName: branchName, serviceId: serviceId, userId: userId, date: dateString, time: timeString)
+                let response = try await dataService.bookAppointment(branchName: branchName, serviceId: serviceId, userId: userId, date: dateString, time: timeString, paymentVia: paymentViaValue)
                 await dataService.fetchUserAppointments(userId: userId, status: "A")
-                await MainActor.run { onConfirm() }
+                await MainActor.run {
+                    bookingSuccessMessage = response.message ?? "Appointment booked successfully."
+                    showBookingSuccess = true
+                }
             } catch {
                 await MainActor.run {
                     bookingError = error.localizedDescription

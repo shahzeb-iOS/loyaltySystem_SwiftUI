@@ -13,30 +13,42 @@ struct ProfileView: View {
     let onSignOut: () -> Void
     
     @State private var showLogoutAlert = false
+    @State private var showDeleteAlert = false
+    @State private var isDeletingAccount = false
+    @State private var deleteError: String?
+    @State private var showDeleteError = false
     
     private var userEmail: String { loggedInUser.email.isEmpty ? "—" : loggedInUser.email }
-    private var membership: String { "Gold Tier" }
-    private var loyaltyId: String { "#\(loggedInUser.id)" }
+    private var membership: String { loggedInUser.membership ?? "—" }
+    private var loyaltyId: String { loggedInUser.loyaltyId ?? "#\(loggedInUser.id)" }
     
     private let lightPink = Color(red: 255/255, green: 230/255, blue: 230/255)
     private let signOutRed = Color(red: 220/255, green: 100/255, blue: 80/255)
     
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 24) {
-                    profileHeader
-                    infoFields
-                    actionButtons
+        ZStack {
+            VStack(spacing: 0) {
+                header
+                
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        profileHeader
+                        infoFields
+                        actionButtons
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+                    .padding(.bottom, 100)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 24)
-                .padding(.bottom, 100)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.appBackgroundWhite)
+            
+            if isDeletingAccount {
+                LoadingOverlay()
+                    .ignoresSafeArea()
             }
         }
-        .background(Color.appBackgroundWhite)
         .alert("Sign out?", isPresented: $showLogoutAlert) {
             Button("No", role: .cancel) { }
             Button("Logout", role: .destructive) {
@@ -44,6 +56,36 @@ struct ProfileView: View {
             }
         } message: {
             Text("Are you sure you want to sign out?")
+        }
+        .alert("Delete account?", isPresented: $showDeleteAlert) {
+            Button("No", role: .cancel) { }
+            Button("Yes", role: .destructive) {
+                isDeletingAccount = true
+                Task { await deleteAccount() }
+            }
+        } message: {
+            Text("Are you sure you want to delete your account? This cannot be undone.")
+        }
+        .alert("Error", isPresented: $showDeleteError) {
+            Button("OK", role: .cancel) { showDeleteError = false }
+        } message: {
+            Text(deleteError ?? "Failed to delete account.")
+        }
+    }
+    
+    private func deleteAccount() async {
+        do {
+            try await DataService.shared.deleteAccount(userId: loggedInUser.id)
+            await MainActor.run {
+                isDeletingAccount = false
+                onSignOut()
+            }
+        } catch {
+            await MainActor.run {
+                isDeletingAccount = false
+                deleteError = error.localizedDescription
+                showDeleteError = true
+            }
         }
     }
     
@@ -159,7 +201,7 @@ struct ProfileView: View {
             }
             .buttonStyle(.plain)
             
-            Button(action: {}) {
+            Button(action: { showDeleteAlert = true }) {
                 HStack(spacing: 8) {
                     Image(systemName: "trash")
                         .font(.system(size: 18, weight: .medium))

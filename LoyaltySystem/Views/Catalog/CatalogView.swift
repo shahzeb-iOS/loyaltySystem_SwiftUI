@@ -12,6 +12,12 @@ enum CatalogTab: String, CaseIterable {
     case promotions = "Promotions"
 }
 
+/// Used for push navigation to Book Appointment from catalog cell
+private struct ServiceForBooking: Identifiable, Hashable {
+    let id: String
+    let name: String
+}
+
 struct CatalogView: View {
     @ObservedObject var dataService: DataService
     let userId: String
@@ -19,6 +25,8 @@ struct CatalogView: View {
     let onBack: () -> Void
     
     @State private var selectedTab: CatalogTab
+    @State private var selectedServiceForBooking: ServiceForBooking?
+    @State private var showBookFlow = false
     @State private var redeemError: String?
     @State private var showRedeemError = false
     @State private var showApiErrorAlert = false
@@ -45,43 +53,53 @@ struct CatalogView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            segmentedControl
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                .padding(.bottom, 16)
-            
-            ZStack(alignment: .top) {
-                if isCatalogLoading {
-                    SpinnerOverlayView(tint: Color.appPrimaryDark)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if (selectedTab == .promotions ? dataService.promotions.isEmpty : catalogItems.isEmpty) {
-                    Text("No data found")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.appTextSecondary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    ScrollView(.vertical, showsIndicators: false) {
-                        LazyVStack(spacing: 16) {
-                            if selectedTab == .promotions {
-                                ForEach(Array(dataService.promotions.enumerated()), id: \.offset) { _, promo in
-                                    promotionCell(promo)
-                                }
-                            } else {
-                                ForEach(catalogItems) { item in
-                                    catalogCard(item)
+        NavigationView {
+            VStack(spacing: 0) {
+                header
+                segmentedControl
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, 16)
+                
+                ZStack(alignment: .top) {
+                    if isCatalogLoading {
+                        SpinnerOverlayView(tint: Color.appPrimaryDark)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if (selectedTab == .promotions ? dataService.promotions.isEmpty : catalogItems.isEmpty) {
+                        Text("No data found")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.appTextSecondary)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        ScrollView(.vertical, showsIndicators: false) {
+                            LazyVStack(spacing: 16) {
+                                if selectedTab == .promotions {
+                                    ForEach(Array(dataService.promotions.enumerated()), id: \.offset) { _, promo in
+                                        promotionCell(promo)
+                                    }
+                                } else {
+                                    ForEach(catalogItems) { item in
+                                        catalogCard(item)
+                                    }
                                 }
                             }
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 100)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 100)
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.appBackgroundWhite)
+            .background(
+                NavigationLink(
+                    destination: bookAppointmentDestination,
+                    isActive: $showBookFlow
+                ) { EmptyView() }
+                .hidden()
+            )
         }
-        .background(Color.appBackgroundWhite)
+        .navigationViewStyle(.stack)
         .task {
             dataService.clearLastError()
             await dataService.fetchAllServices()
@@ -107,6 +125,26 @@ struct CatalogView: View {
             Button("OK", role: .cancel) { showRedeemError = false }
         } message: {
             Text(redeemError ?? "Something went wrong.")
+        }
+    }
+    
+    private var bookAppointmentDestination: some View {
+        Group {
+            if let svc = selectedServiceForBooking {
+                BookAppointmentFlowView(
+                    userId: userId,
+                    dataService: dataService,
+                    onDismiss: {
+                        showBookFlow = false
+                        selectedServiceForBooking = nil
+                    },
+                    initialServiceId: svc.id,
+                    initialServiceName: svc.name
+                )
+                .navigationBarHidden(true)
+            } else {
+                EmptyView()
+            }
         }
     }
     
@@ -275,11 +313,16 @@ struct CatalogView: View {
                         .foregroundColor(.appAccentGold)
                 }
                 
-                // Redeem button (calls redeemPoints API)
-                Button(action: { redeemPoints(for: item) }) {
+                // Book: push Book Appointment with this cell's data; get values and print which cell was booked
+                Button(action: {
+                    let serviceId = "\(item.id)"
+                    let serviceName = item.title
+                    print("[Book] Cell booked – id: \(serviceId), title: \(serviceName), price: \(item.price), points: \(item.points), discount: \(item.discount)")
+                    selectedServiceForBooking = ServiceForBooking(id: serviceId, name: serviceName)
+                    showBookFlow = true
+                }) {
                     HStack {
-                        if dataService.isRedeemingPoints { ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white)) }
-                        Text(dataService.isRedeemingPoints ? "Redeeming..." : "Redeem")
+                        Text("Book")
                             .font(.system(size: 14, weight: .regular))
                             .foregroundColor(.white)
                     }
@@ -289,7 +332,6 @@ struct CatalogView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
                 .buttonStyle(.plain)
-                .disabled(dataService.isRedeemingPoints || (dataService.dashboardPoints ?? 0) < item.points)
             }
         }
         .padding(.horizontal, 20)

@@ -32,11 +32,7 @@ struct HistoryView: View {
     }
     
     private var filteredEntries: [HistoryEntry] {
-        switch selectedFilter {
-        case .all: return historyEntries
-        case .upcoming: return historyEntries.filter { $0.status == .upcoming }
-        case .past: return historyEntries.filter { $0.status == .completed }
-        }
+        historyEntries
     }
     
     var body: some View {
@@ -150,10 +146,12 @@ struct HistoryView: View {
                 
                 Spacer()
                 
-                Text(entry.status.rawValue)
+                Text(entry.approvalStatusDisplay)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(entry.status == .upcoming ? .appAccentGold : .appTextSecondary)
-                    .padding(.horizontal, 10)
+                    .frame(width: 88, alignment: .center)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                     .padding(.vertical, 4)
                     .background(entry.status == .upcoming ? Color.appAccentGold.opacity(0.25) : Color.appTextSecondary.opacity(0.2))
                     .clipShape(Capsule())

@@ -7,19 +7,14 @@
 
 import SwiftUI
 
-/// Used so catalog opens with correct tab (Promotions vs All) when presented via fullScreenCover(item:).
-private struct CatalogPresentationItem: Identifiable {
-    var openWithPromotionsSelected: Bool
-    var id: String { openWithPromotionsSelected ? "promotions" : "catalog" }
-}
-
 struct HomeView: View {
     let loggedInUser: LoggedInUser
     @ObservedObject var dataService: DataService
     @Binding var hasLoadedOnce: Bool
     @Binding var isRefreshingHome: Bool
+    @Binding var catalogPresentation: CatalogPresentationItem?
+    var onOpenHistory: (() -> Void)?
     @State private var showBookAppointment = false
-    @State private var catalogPresentation: CatalogPresentationItem?
     @State private var showNotifications = false
     @State private var showLoyaltyArchitecture = false
     @State private var showErrorAlert = false
@@ -33,11 +28,13 @@ struct HomeView: View {
         await dataService.fetchUserAppointments(userId: loggedInUser.id, status: "A")
     }
     
-    init(loggedInUser: LoggedInUser, dataService: DataService = .shared, hasLoadedOnce: Binding<Bool> = .constant(false), isRefreshingHome: Binding<Bool> = .constant(false)) {
+    init(loggedInUser: LoggedInUser, dataService: DataService = .shared, hasLoadedOnce: Binding<Bool> = .constant(false), isRefreshingHome: Binding<Bool> = .constant(false), catalogPresentation: Binding<CatalogPresentationItem?> = .constant(nil), onOpenHistory: (() -> Void)? = nil) {
         self.loggedInUser = loggedInUser
         self._dataService = ObservedObject(wrappedValue: dataService)
         self._hasLoadedOnce = hasLoadedOnce
         self._isRefreshingHome = isRefreshingHome
+        self._catalogPresentation = catalogPresentation
+        self.onOpenHistory = onOpenHistory
     }
     
     var body: some View {
@@ -48,26 +45,26 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     // Header
                     headerSection
-                        .padding(.bottom, 24)
+                        .padding(.bottom, 16)
                 
                 // Loyalty Tiers Section
                 loyaltyTiersSection
-                    .padding(.bottom, 24)
+                    .padding(.bottom, 16)
                 
                 // Quick Actions
                 quickActionsSection
-                    .padding(.bottom, 24)
+                    .padding(.bottom, 16)
                 
                 // Next Appointment
                 nextAppointmentSection
-                    .padding(.bottom, 24)
+                    .padding(.bottom, 16)
                 
                 // Promotions
                 promotionsSection
-                    .padding(.bottom, 100)
+                    .padding(.bottom, 40)
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 16)
+                .padding(.top, 12)
             }
             .refreshable {
                 isRefreshingHome = true
@@ -96,11 +93,6 @@ struct HomeView: View {
         }
         .fullScreenCover(isPresented: $showBookAppointment) {
             BookAppointmentFlowView(userId: loggedInUser.id, dataService: dataService, onDismiss: { showBookAppointment = false })
-        }
-        .fullScreenCover(item: $catalogPresentation) { item in
-            CatalogView(dataService: dataService, userId: loggedInUser.id, initialTab: item.openWithPromotionsSelected ? .promotions : nil, onBack: {
-                catalogPresentation = nil
-            })
         }
         .fullScreenCover(isPresented: $showNotifications) {
             NotificationsView(onDismiss: { showNotifications = false })
@@ -147,7 +139,7 @@ struct HomeView: View {
     
     private var loyaltyTiersSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader(title: "LOYALTY TIERS", seeAllAction: {})
+            sectionHeader(title: "LOYALTY TIERS", seeAllAction: {}, showSeeAll: false)
             pointsBalanceCard
         }
     }
@@ -238,7 +230,6 @@ struct HomeView: View {
                 .fixedSize(horizontal: true, vertical: false)
             }
         }
-        .padding(.horizontal, 20)
         .padding(.bottom, 10)
         .padding(.top, 15)
         .background(Color.appPrimaryDark)
@@ -250,7 +241,7 @@ struct HomeView: View {
             quickActionCard(
                 icon: "calendar",
                 title: "New Appointment",
-                action: { showBookAppointment = true }
+                action: { catalogPresentation = CatalogPresentationItem(openWithPromotionsSelected: false) }
             )
             .frame(maxWidth: .infinity)
             
@@ -290,7 +281,7 @@ struct HomeView: View {
     
     private var nextAppointmentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader(title: "NEXT APPOINTMENT", seeAllAction: {})
+            sectionHeader(title: "NEXT APPOINTMENT", seeAllAction: { onOpenHistory?() })
             
             nextAppointmentCard
         }
@@ -307,19 +298,19 @@ struct HomeView: View {
             location = next.location ?? next.branchName ?? "—"
             dateStr = next.date ?? "—"
             timeStr = next.time ?? "—"
-            statusStr = next.status ?? "Confirmed"
+            statusStr = next.status ?? ""
         } else if let first = dataService.appointments.first {
             serviceName = first.serviceName ?? "—"
             location = first.location ?? "—"
             dateStr = first.date ?? "—"
             timeStr = first.time ?? "—"
-            statusStr = first.status ?? "Confirmed"
+            statusStr = first.status ?? ""
         } else {
             serviceName = "—"
             location = "—"
             dateStr = "—"
             timeStr = "—"
-            statusStr = "Confirmed"
+            statusStr = ""
         }
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -328,14 +319,15 @@ struct HomeView: View {
                     .foregroundColor(.black)
                 
                 Spacer()
-                
-                Text(statusStr)
-                    .font(.appCaption)
-                    .foregroundColor(.appTextPrimary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Color.appAccentGold)
-                    .clipShape(Capsule())
+                if !(statusStr.isEmpty) {
+                    Text(statusStr)
+                        .font(.appCaption)
+                        .foregroundColor(.appTextPrimary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.appAccentGold)
+                        .clipShape(Capsule())
+                }
             }
             
             HStack(spacing: 4) {
@@ -437,7 +429,7 @@ struct HomeView: View {
         return "Spend more  $\(next - cur) to reach next tier"
     }
     
-    private func sectionHeader(title: String, seeAllAction: @escaping () -> Void) -> some View {
+    private func sectionHeader(title: String, seeAllAction: @escaping () -> Void, showSeeAll: Bool = true) -> some View {
         HStack {
             Text(title)
                 .font(.appSectionHeader)
@@ -445,12 +437,14 @@ struct HomeView: View {
             
             Spacer()
             
-            Button(action: seeAllAction) {
-                Text("See All")
-                    .font(.custom("Poppins-SemiBold", size: 10))
-                    .foregroundColor(.appAccentGold)
+            if showSeeAll {
+                Button(action: seeAllAction) {
+                    Text("See All")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.appAccentGold)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
     }
 }
