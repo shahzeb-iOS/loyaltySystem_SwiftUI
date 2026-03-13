@@ -63,7 +63,7 @@ struct CatalogView: View {
                 
                 ZStack(alignment: .top) {
                     if isCatalogLoading {
-                        SpinnerOverlayView(tint: Color.appPrimaryDark)
+                        LoadingOverlay()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else if (selectedTab == .promotions ? dataService.promotions.isEmpty : catalogItems.isEmpty) {
                         Text("No data found")
@@ -226,7 +226,7 @@ struct CatalogView: View {
                             .aspectRatio(contentMode: .fill)
                     case .failure, .empty:
                         Color.appLightBeige
-                            .overlay(ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .appPrimaryDark)))
+                            .overlay(ProgressView().progressViewStyle(CircularProgressViewStyle(tint: Color.appAccentGold)))
                     @unknown default:
                         Color.appLightBeige
                     }

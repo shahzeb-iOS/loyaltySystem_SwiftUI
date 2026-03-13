@@ -2,7 +2,7 @@
 //  GetTiersResponse.swift
 //  LoyaltySystem
 //
-//  getTiers API response
+//  getTiers API – {"status":true,"message":"...","data":[{id, title, tier_spending, tier_description, tier_benefits}, ...]}
 //
 
 import Foundation
@@ -10,47 +10,31 @@ import Foundation
 struct GetTiersResponse: Decodable {
     let status: Bool?
     let message: String?
-    let tiers: [TierItem]?
+    let data: [TierItem]?
     
-    enum CodingKeys: String, CodingKey {
-        case status, message, tiers, data
-    }
-    
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        status = try c.decodeIfPresent(Bool.self, forKey: .status)
-        message = try c.decodeIfPresent(String.self, forKey: .message)
-        let tiersArray = try c.decodeIfPresent([TierItem].self, forKey: .tiers)
-        let dataArray = try c.decodeIfPresent([TierItem].self, forKey: .data)
-        tiers = tiersArray ?? dataArray
-    }
+    var tiers: [TierItem]? { data }
 }
 
 struct TierItem: Decodable, Identifiable {
-    var id: String { tierId ?? name ?? (description ?? "").prefix(20).description }
-    let tierId: String?
-    let name: String?
-    let description: String?
-    let pointsRequired: Int?
-    let benefits: [String]?
-    let image: String?
-
+    let idValue: Int?
+    let title: String?
+    let tierSpending: String?
+    let tierDescription: String?
+    let tierBenefits: [String]?
+    
     enum CodingKeys: String, CodingKey {
-        case tierId, name, description, pointsRequired, benefits, image
-        case tier_id, points_required
+        case idValue = "id"
+        case title
+        case tierSpending = "tier_spending"
+        case tierDescription = "tier_description"
+        case tierBenefits = "tier_benefits"
     }
-
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        let tierIdCamel = try c.decodeIfPresent(String.self, forKey: .tierId)
-        let tierIdSnake = try c.decodeIfPresent(String.self, forKey: .tier_id)
-        tierId = tierIdCamel ?? tierIdSnake
-        name = try c.decodeIfPresent(String.self, forKey: .name)
-        description = try c.decodeIfPresent(String.self, forKey: .description)
-        let pointsCamel = try c.decodeIfPresent(Int.self, forKey: .pointsRequired)
-        let pointsSnake = try c.decodeIfPresent(Int.self, forKey: .points_required)
-        pointsRequired = pointsCamel ?? pointsSnake
-        benefits = try c.decodeIfPresent([String].self, forKey: .benefits)
-        image = try c.decodeIfPresent(String.self, forKey: .image)
-    }
+    
+    var id: Int { idValue ?? 0 }
+    
+    /// For compatibility with existing code
+    var name: String? { title }
+    var description: String? { tierDescription }
+    var benefits: [String]? { tierBenefits }
+    var pointsRequired: Int? { tierSpending.flatMap { Int($0) } }
 }

@@ -2,11 +2,13 @@
 //  AppFlowViewModel.swift
 //  LoyaltySystem
 //
-//  ViewModel coordinating app navigation flow: Splash -> Onboarding -> Auth -> Main
+//  ViewModel coordinating app navigation flow: Splash -> Onboarding (once) -> Auth -> Main
 //
 
 import Foundation
 import SwiftUI
+
+private let hasCompletedOnboardingKey = "hasCompletedOnboarding"
 
 enum AppScreen {
     case splash
@@ -34,11 +36,17 @@ final class AppFlowViewModel: ObservableObject {
     func handleSplashComplete() {
         withAnimation {
             showSplash = false
-            currentScreen = .onboarding
+            // Onboarding sirf pehli baar (first install) dikhao; baad mein seedha sign-in
+            if UserDefaults.standard.bool(forKey: hasCompletedOnboardingKey) {
+                currentScreen = .signIn
+            } else {
+                currentScreen = .onboarding
+            }
         }
     }
-    
+
     func handleOnboardingComplete() {
+        UserDefaults.standard.set(true, forKey: hasCompletedOnboardingKey)
         currentScreen = .signIn
     }
     

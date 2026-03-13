@@ -21,6 +21,8 @@ final class DataService: ObservableObject {
     @Published var currentSpending: Int?
     @Published var nextTierSpending: Int?
     @Published var latestPromotion: LatestPromotionItem?
+    @Published var notifications: [NotificationApiItem] = []
+    @Published var isLoadingNotifications = false
     @Published var isLoadingServices = false
     @Published var isLoadingPromotions = false
     @Published var isLoadingAppointments = false
@@ -140,6 +142,22 @@ final class DataService: ObservableObject {
             currentSpending = nil
             nextTierSpending = nil
             latestPromotion = nil
+        }
+    }
+    
+    /// getNotifications – fetches notifications for the user.
+    func fetchNotifications(userId: String) async {
+        isLoadingNotifications = true
+        defer { isLoadingNotifications = false }
+        
+        let endpoint = APIEndpoint.getNotifications(userId: userId)
+        do {
+            let response: GetNotificationsResponse = try await APIService.shared.request(endpoint)
+            notifications = response.notifications ?? []
+        } catch {
+            print("[DataService] getNotifications error: \(error.localizedDescription)")
+            lastErrorMessage = error.localizedDescription
+            notifications = []
         }
     }
     

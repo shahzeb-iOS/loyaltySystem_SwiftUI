@@ -26,16 +26,16 @@ struct MainTabView: View {
     let onLogout: () -> Void
     @StateObject private var dataService = DataService.shared
     @State private var selectedTab: MainTab = .home
-    @State private var showHistoryPush = false
     @State private var hasLoadedHomeOnce = false
     @State private var isRefreshingHome = false
     @State private var catalogPresentation: CatalogPresentationItem?
     
-    /// Loader until first home load completes – keeps Home static, no UI shift when API data arrives
+    /// Loader only on Home/Center tab – History/Profile apna khud dikhate hain, doosra spinner + gray na aaye
     private var showHomeLoader: Bool {
         let onHomeTab = (selectedTab == .home || selectedTab == .center)
+        guard onHomeTab else { return false }
         let notLoadedYet = !hasLoadedHomeOnce
-        if onHomeTab && notLoadedYet { return true }
+        if notLoadedYet { return true }
         return isRefreshingHome || dataService.isLoadingDashboard || dataService.isLoadingServices
             || dataService.isLoadingPromotions || dataService.isLoadingAppointments
     }
@@ -51,11 +51,15 @@ struct MainTabView: View {
                     ZStack {
                         homeView
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .opacity(selectedTab == .home || selectedTab == .center || selectedTab == .history ? 1 : 0)
+                            .opacity(selectedTab == .home || selectedTab == .center ? 1 : 0)
                             .allowsHitTesting(selectedTab == .home || selectedTab == .center)
                         
                         if selectedTab == .rewards {
                             EmptyView()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        }
+                        if selectedTab == .history {
+                            HistoryView(userId: loggedInUser.id, dataService: dataService, onBack: { selectedTab = .home })
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                         if selectedTab == .profile {
@@ -64,16 +68,6 @@ struct MainTabView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(
-                        NavigationLink(
-                            destination: HistoryView(userId: loggedInUser.id, dataService: dataService, onBack: {
-                                showHistoryPush = false
-                                selectedTab = .home
-                            }),
-                            isActive: $showHistoryPush
-                        ) { EmptyView() }
-                        .hidden()
-                    )
                     .navigationBarHidden(true)
                 }
                 .navigationViewStyle(.stack)
@@ -131,7 +125,6 @@ struct MainTabView: View {
             }
             if tab == .history {
                 selectedTab = .history
-                showHistoryPush = true
                 return
             }
             selectedTab = tab

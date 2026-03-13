@@ -95,7 +95,7 @@ struct HomeView: View {
             BookAppointmentFlowView(userId: loggedInUser.id, dataService: dataService, onDismiss: { showBookAppointment = false })
         }
         .fullScreenCover(isPresented: $showNotifications) {
-            NotificationsView(onDismiss: { showNotifications = false })
+            NotificationsView(userId: loggedInUser.id, dataService: dataService, onDismiss: { showNotifications = false })
         }
         .fullScreenCover(isPresented: $showLoyaltyArchitecture) {
             LoyaltyArchitectureView(
@@ -230,6 +230,7 @@ struct HomeView: View {
                 .fixedSize(horizontal: true, vertical: false)
             }
         }
+        .padding(.horizontal, 10)
         .padding(.bottom, 10)
         .padding(.top, 15)
         .background(Color.appPrimaryDark)
@@ -391,7 +392,7 @@ struct HomeView: View {
                         Color.appPrimaryDark
                     case .empty:
                         Color.appPrimaryDark
-                            .overlay(ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white)))
+                            .overlay(ProgressView().progressViewStyle(CircularProgressViewStyle(tint: Color.appAccentGold)))
                     @unknown default:
                         Color.appPrimaryDark
                     }

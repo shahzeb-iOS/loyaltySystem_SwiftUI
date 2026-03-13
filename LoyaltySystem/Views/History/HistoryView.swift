@@ -45,7 +45,7 @@ struct HistoryView: View {
             
             ZStack(alignment: .top) {
                 if dataService.isLoadingAppointments {
-                    SpinnerOverlayView(tint: Color.appPrimaryDark)
+                    LoadingOverlay()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if filteredEntries.isEmpty {
                     Text("No data found")

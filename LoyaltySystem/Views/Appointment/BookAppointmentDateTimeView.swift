@@ -249,7 +249,7 @@ struct BookAppointmentDateTimeView: View {
             HStack {
                 if dataService.isBookingAppointment {
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .progressViewStyle(CircularProgressViewStyle(tint: Color.appAccentGold))
                 }
                 Text(dataService.isBookingAppointment ? "Booking..." : "Confirm Appointment")
                     .font(.system(size: 17, weight: .semibold))

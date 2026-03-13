@@ -26,6 +26,7 @@ enum APIEndpoint {
     case updatePassword(email: String, newpassword: String)
     case bookAppointment(branchName: String, serviceId: String, userId: String, date: String, time: String, paymentVia: String)
     case getDashboard(userId: String)
+    case getNotifications(userId: String)
     case redeemPoints(userId: String, points: Int)
     case deleteAccount(userId: String)
     
@@ -42,6 +43,7 @@ enum APIEndpoint {
         case .updatePassword: return "apis/updatePassword"
         case .bookAppointment: return "apis/bookAppointment"
         case .getDashboard: return "apis/getDashboard"
+        case .getNotifications: return "apis/getNotifications"
         case .redeemPoints: return "apis/redeemPoints"
         case .deleteAccount: return "apis/deleteAccount"
         }
@@ -50,7 +52,7 @@ enum APIEndpoint {
     var method: HTTPMethod {
         switch self {
         case .login, .createAccount, .getUserAppointments, .sendOTP, .verifyOtp, .updatePassword,
-             .bookAppointment, .getDashboard, .redeemPoints, .deleteAccount: return .post
+             .bookAppointment, .getDashboard, .getNotifications, .redeemPoints, .deleteAccount: return .post
         case .getPromotions, .getAllServices, .getTiers: return .get
         }
     }
@@ -59,7 +61,7 @@ enum APIEndpoint {
     var authorizationHeader: String? {
         let raw: String?
         switch self {
-        case .getTiers, .getUserAppointments, .bookAppointment, .getDashboard, .redeemPoints, .deleteAccount: raw = APIConfig.authTokenGetTiers
+        case .getTiers, .getUserAppointments, .bookAppointment, .getDashboard, .getNotifications, .redeemPoints, .deleteAccount: raw = APIConfig.authTokenGetTiers
         case .sendOTP, .verifyOtp, .updatePassword: raw = APIConfig.authTokenAuth
         default: raw = nil
         }
@@ -107,6 +109,9 @@ enum APIEndpoint {
             return try? JSONSerialization.data(withJSONObject: params)
         case .getDashboard(let userId):
             let params: [String: Any] = ["userid": Int(userId) ?? 1]
+            return try? JSONSerialization.data(withJSONObject: params)
+        case .getNotifications(let userId):
+            let params: [String: Any] = ["userID": Int(userId) ?? 0]
             return try? JSONSerialization.data(withJSONObject: params)
         case .redeemPoints(let userId, let points):
             let params: [String: Any] = [

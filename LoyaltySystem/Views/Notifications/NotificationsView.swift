@@ -8,13 +8,14 @@
 import SwiftUI
 
 struct NotificationsView: View {
+    let userId: String
+    @ObservedObject var dataService: DataService
     let onDismiss: () -> Void
-    
-    @State private var notifications: [NotificationItem] = [
-        NotificationItem(iconName: "chart.bar.fill", iconColor: "green", title: "Points Earned", detail: "You earned 15 points on your last visit!", timestamp: "5hr ago"),
-        NotificationItem(iconName: "calendar", iconColor: "gold", title: "Appointment Reminder", detail: "Classic Facial in 2 days at 02:30 PM", timestamp: "8hr ago")
-    ]
-    
+
+    private var displayItems: [NotificationItem] {
+        dataService.notifications.map { $0.toNotificationItem() }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header with close button
@@ -31,18 +32,32 @@ struct NotificationsView: View {
             .padding(.horizontal, 16)
             .padding(.top, 12)
             .padding(.bottom, 8)
-            
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: 16) {
-                    ForEach(notifications) { item in
-                        notificationCard(item)
+
+            if dataService.isLoadingNotifications {
+                LoadingOverlay()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if displayItems.isEmpty {
+                Spacer()
+                Text("No notifications")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.appTextSecondary)
+                Spacer()
+            } else {
+                ScrollView(.vertical, showsIndicators: false) {
+                    LazyVStack(spacing: 16) {
+                        ForEach(displayItems) { item in
+                            notificationCard(item)
+                        }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 40)
             }
         }
         .background(Color.appBackgroundWhite)
+        .task {
+            await dataService.fetchNotifications(userId: userId)
+        }
     }
     
     private func notificationCard(_ item: NotificationItem) -> some View {
@@ -52,7 +67,7 @@ struct NotificationsView: View {
                 Color.appLightBeige
                 Image(systemName: item.iconName)
                     .font(.system(size: 24, weight: .medium))
-                    .foregroundColor(item.iconColor == "green" ? Color.green : Color.appAccentGold)
+                    .foregroundColor(item.iconColor == "green" ? Color.green : (item.iconColor == "gold" ? Color.appAccentGold : Color.appAccentGold))
             }
             .frame(width: 48, height: 48)
             .clipShape(Circle())
@@ -87,6 +102,6 @@ struct NotificationsView: View {
 
 struct NotificationsView_Previews: PreviewProvider {
     static var previews: some View {
-        NotificationsView(onDismiss: {})
+        NotificationsView(userId: "1", dataService: DataService.shared, onDismiss: {})
     }
 }
