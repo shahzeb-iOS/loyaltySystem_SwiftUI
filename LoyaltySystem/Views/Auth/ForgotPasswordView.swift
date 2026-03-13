@@ -37,11 +37,11 @@ struct ForgotPasswordView: View {
                     .padding(.top, 12)
                     .padding(.bottom, 8)
                     
-                    Spacer().frame(height: 20)
-                    
                     Text("Forgot password")
                         .font(.appAuthTitle)
                         .foregroundColor(.appPrimaryDark)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 20)
                     
                     Spacer().frame(height: 10)
                     
@@ -88,7 +88,13 @@ struct ForgotPasswordView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
             }
+            
+            if isSendingOTP {
+                LoadingOverlay()
+                    .ignoresSafeArea()
+            }
         }
+        .navigationBarHidden(true)
     }
     
     private func sendOTP() async {

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct RootView: View {
     @StateObject private var flowViewModel = AppFlowViewModel()
+    @State private var showForgotPasswordPush = false
     
     var body: some View {
         ZStack {
@@ -23,11 +24,29 @@ struct RootView: View {
                     onSkip: flowViewModel.handleOnboardingComplete
                 )
             case .signIn:
-                SignInView(
-                    onSignIn: { user in flowViewModel.handleAuthSuccess(user: user) },
-                    onSignUp: flowViewModel.navigateToSignUp,
-                    onForgotPassword: flowViewModel.navigateToForgotPassword
-                )
+                NavigationView {
+                    SignInView(
+                        onSignIn: { user in flowViewModel.handleAuthSuccess(user: user) },
+                        onSignUp: flowViewModel.navigateToSignUp,
+                        onForgotPassword: { showForgotPasswordPush = true }
+                    )
+                    .background(
+                        NavigationLink(
+                            destination: ForgotPasswordView(
+                                onBack: { showForgotPasswordPush = false },
+                                onResetSent: { email in
+                                    flowViewModel.navigateToOTPVerification(email: email, fromForgotPassword: true)
+                                    showForgotPasswordPush = false
+                                }
+                            )
+                            .navigationBarHidden(true),
+                            isActive: $showForgotPasswordPush
+                        ) { EmptyView() }
+                        .hidden()
+                    )
+                    .navigationBarHidden(true)
+                }
+                .navigationViewStyle(.stack)
             case .signUp:
                 SignUpView(
                     onSignUp: { email, fullName in flowViewModel.navigateToOTPVerification(email: email, fullName: fullName) },
@@ -52,7 +71,7 @@ struct RootView: View {
                 )
             case .setNewPassword:
                 SetNewPasswordView(
-                    email: flowViewModel.otpEmail,
+                    userId: flowViewModel.otpUserId,
                     onBack: flowViewModel.navigateBackToOTP,
                     onResetComplete: flowViewModel.navigateBackToSignIn
                 )

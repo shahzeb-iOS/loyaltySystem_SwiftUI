@@ -84,10 +84,11 @@ final class AuthViewModel: ObservableObject {
         
         defer { isLoading = false }
         
+        let fcmToken = await FCMService.shared.getToken() ?? ""
         let endpoint = APIEndpoint.login(
             email: email,
             password: password,
-            fcmToken: "123"
+            fcmToken: fcmToken
         )
         
         do {
@@ -123,6 +124,7 @@ final class AuthViewModel: ObservableObject {
         defer { isLoading = false }
         
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_GB")
         formatter.dateFormat = "dd/MM/yyyy"
         let dobString = formatter.string(from: dateOfBirth)
         

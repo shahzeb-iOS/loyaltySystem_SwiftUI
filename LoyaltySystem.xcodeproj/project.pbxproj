@@ -65,6 +65,8 @@
 			);
 			name = LoyaltySystem;
 			packageProductDependencies = (
+				04A852672F4CBF2300D7F932 /* FirebaseCore */,
+				04A852682F4CBF2300D7F932 /* FirebaseMessaging */,
 			);
 			productName = LoyaltySystem;
 			productReference = 04A852582F4CBF2300D7F931 /* LoyaltySystem.app */;
@@ -94,6 +96,9 @@
 			);
 			mainGroup = 04A8524F2F4CBF2300D7F931;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				04A852662F4CBF2300D7F932 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 04A852592F4CBF2300D7F931 /* Products */;
 			projectDirPath = "";
@@ -326,6 +331,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		04A852662F4CBF2300D7F932 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		04A852672F4CBF2300D7F932 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseCore;
+			package = 04A852662F4CBF2300D7F932 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+		};
+		04A852682F4CBF2300D7F932 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseMessaging;
+			package = 04A852662F4CBF2300D7F932 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 04A852502F4CBF2300D7F931 /* Project object */;
 }

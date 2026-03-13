@@ -271,7 +271,7 @@ struct SignUpView: View {
             Task {
                 await viewModel.signUp()
                 if viewModel.signUpSuccess {
-                    showSuccessAlert = true
+                    onSignUp(viewModel.email, viewModel.fullName)
                 }
             }
         }

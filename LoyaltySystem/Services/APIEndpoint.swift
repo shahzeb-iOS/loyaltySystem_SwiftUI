@@ -23,7 +23,7 @@ enum APIEndpoint {
     case getTiers
     case sendOTP(email: String)
     case verifyOtp(email: String, otp: String)
-    case updatePassword(email: String, newpassword: String)
+    case updatePassword(id: Int, password: String)
     case bookAppointment(branchName: String, serviceId: String, userId: String, date: String, time: String, paymentVia: String)
     case getDashboard(userId: String)
     case getNotifications(userId: String)
@@ -125,8 +125,8 @@ enum APIEndpoint {
         case .verifyOtp(let email, let otp):
             let params: [String: Any] = ["email": email, "otp": otp]
             return try? JSONSerialization.data(withJSONObject: params)
-        case .updatePassword(let email, let newpassword):
-            let params: [String: Any] = ["email": email, "newpassword": newpassword]
+        case .updatePassword(let id, let password):
+            let params: [String: Any] = ["id": id, "password": password]
             return try? JSONSerialization.data(withJSONObject: params)
         case .deleteAccount(let userId):
             let params: [String: Any] = ["userid": Int(userId) ?? 0]

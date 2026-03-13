@@ -69,13 +69,29 @@ final class APIService {
                 throw APIError.httpError(statusCode: httpResponse.statusCode)
             }
             
+            let jsonData = stripLeadingNonJSON(from: data)
             let decoder = JSONDecoder()
-            return try decoder.decode(T.self, from: data)
+            do {
+                return try decoder.decode(T.self, from: jsonData)
+            } catch {
+                if let msg = parseErrorMessage(from: jsonData) {
+                    throw APIError.serverError(message: msg)
+                }
+                throw APIError.networkError(error)
+            }
         } catch let error as APIError {
             throw error
         } catch {
             throw APIError.networkError(error)
         }
+    }
+    
+    /// Removes PHP/HTML prefix so only JSON is left (e.g. "{\"status\":false,\"message\":\"...\"}")
+    private func stripLeadingNonJSON(from data: Data) -> Data {
+        guard let str = String(data: data, encoding: .utf8),
+              let start = str.firstIndex(of: "{") else { return data }
+        let jsonPart = String(str[start...])
+        return Data(jsonPart.utf8)
     }
     
     private func parseErrorMessage(from data: Data) -> String? {

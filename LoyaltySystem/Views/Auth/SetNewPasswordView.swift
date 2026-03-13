@@ -11,7 +11,7 @@ struct SetNewPasswordView: View {
     @StateObject private var viewModel = AuthViewModel()
     @State private var isUpdating = false
     @State private var updateError: String?
-    let email: String
+    let userId: Int
     let onBack: () -> Void
     let onResetComplete: () -> Void
     
@@ -97,7 +97,7 @@ struct SetNewPasswordView: View {
                     
                     Button("Reset Password") {
                         updateError = nil
-                        guard viewModel.password.count >= 4, viewModel.password.count <= 15, !email.isEmpty else { return }
+                        guard viewModel.password.count >= 4, viewModel.password.count <= 15 else { return }
                         Task { await updatePassword() }
                     }
                     .font(.appButton)
@@ -106,8 +106,8 @@ struct SetNewPasswordView: View {
                     .padding(.vertical, 16)
                     .background(Color.appPrimaryDark)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .disabled(viewModel.password.count < 4 || viewModel.password.count > 15 || email.isEmpty || isUpdating)
-                    .opacity(viewModel.password.count >= 4 && viewModel.password.count <= 15 && !email.isEmpty && !isUpdating ? 1 : 0.6)
+                    .disabled(viewModel.password.count < 4 || viewModel.password.count > 15 || isUpdating)
+                    .opacity(viewModel.password.count >= 4 && viewModel.password.count <= 15 && !isUpdating ? 1 : 0.6)
                     .padding(.horizontal, 24)
                 }
                 .padding(.vertical, 24)
@@ -118,7 +118,7 @@ struct SetNewPasswordView: View {
     private func updatePassword() async {
         isUpdating = true
         defer { isUpdating = false }
-        let endpoint = APIEndpoint.updatePassword(email: email, newpassword: viewModel.password)
+        let endpoint = APIEndpoint.updatePassword(id: userId, password: viewModel.password)
         do {
             let response: MessageResponse = try await APIService.shared.request(endpoint)
             let ok = response.success ?? response.status ?? false
@@ -136,6 +136,6 @@ struct SetNewPasswordView: View {
 
 struct SetNewPasswordView_Previews: PreviewProvider {
     static var previews: some View {
-        SetNewPasswordView(email: "user@example.com", onBack: {}, onResetComplete: {})
+        SetNewPasswordView(userId: 5, onBack: {}, onResetComplete: {})
     }
 }

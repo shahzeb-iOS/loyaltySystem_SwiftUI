@@ -30,6 +30,7 @@ final class AppFlowViewModel: ObservableObject {
     @Published var forgotPasswordEmail: String = ""
     @Published var otpEmail: String = ""
     @Published var otpFullName: String = ""
+    @Published var otpUserId: Int = 5
     @Published var otpFromForgotPassword: Bool = false
     @Published var loggedInUser: LoggedInUser?
     
