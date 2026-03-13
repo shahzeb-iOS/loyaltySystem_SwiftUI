@@ -30,18 +30,18 @@ enum APIEndpoint {
     
     var path: String {
         switch self {
-        case .login: return "/login"
-        case .createAccount: return "/createAccount"
-        case .getPromotions: return "/getPromotions"
-        case .getUserAppointments: return "/getUserAppointments"
-        case .getAllServices: return "/getAllServices"
-        case .getTiers: return "/getTiers"
-        case .sendOTP: return "/sendOtp"
-        case .verifyOtp: return "/verifyOtp"
-        case .updatePassword: return "/updatePassword"
-        case .bookAppointment: return "/bookAppointment"
-        case .getDashboard: return "/getDashboard"
-        case .redeemPoints: return "/redeemPoints"
+        case .login: return "apis/login"
+        case .createAccount: return "apis/createAccount"
+        case .getPromotions: return "apis/getPromotions"
+        case .getUserAppointments: return "apis/getUserAppointments"
+        case .getAllServices: return "apis/getAllServices"
+        case .getTiers: return "apis/getTiers"
+        case .sendOTP: return "apis/sendOtp"
+        case .verifyOtp: return "apis/verifyOtp"
+        case .updatePassword: return "apis/updatePassword"
+        case .bookAppointment: return "apis/bookAppointment"
+        case .getDashboard: return "apis/getDashboard"
+        case .redeemPoints: return "apis/redeemPoints"
         }
     }
     

@@ -20,6 +20,7 @@ final class DataService: ObservableObject {
     @Published var nextAppointment: DashboardAppointmentItem?
     @Published var currentSpending: Int?
     @Published var nextTierSpending: Int?
+    @Published var latestPromotion: LatestPromotionItem?
     @Published var isLoadingServices = false
     @Published var isLoadingPromotions = false
     @Published var isLoadingAppointments = false
@@ -28,6 +29,8 @@ final class DataService: ObservableObject {
     @Published var isBookingAppointment = false
     @Published var isRedeemingPoints = false
     @Published var lastErrorMessage: String?
+    @Published var nextTier: String?
+    @Published var currentTier: String?
     
     private init() {}
     
@@ -106,8 +109,10 @@ final class DataService: ObservableObject {
             let data = response.data
             dashboardPoints = data?.points
             dashboardTierName = data?.userTier?.currentTier
-            currentSpending = data?.totalSpendings ?? data?.points
+            currentSpending = data?.totalSpendings ?? data?.points 
             nextTierSpending = data?.userTier?.nextTierSpendings.flatMap { Int($0) }
+            nextTier = data?.userTier?.nextTier 
+            currentTier = data?.userTier?.currentTier
             if nextTierSpending == nil, let cur = data?.totalSpendings {
                 nextTierSpending = nextTierPointsRequired(currentPoints: cur)
             }
@@ -125,6 +130,7 @@ final class DataService: ObservableObject {
             } else {
                 nextAppointment = nil
             }
+            latestPromotion = data?.latestPromotion
         } catch {
             print("[DataService] getDashboard error: \(error.localizedDescription)")
             lastErrorMessage = error.localizedDescription
@@ -133,6 +139,7 @@ final class DataService: ObservableObject {
             nextAppointment = nil
             currentSpending = nil
             nextTierSpending = nil
+            latestPromotion = nil
         }
     }
     

@@ -7,14 +7,19 @@
 
 import SwiftUI
 
+/// Used so catalog opens with correct tab (Promotions vs All) when presented via fullScreenCover(item:).
+private struct CatalogPresentationItem: Identifiable {
+    var openWithPromotionsSelected: Bool
+    var id: String { openWithPromotionsSelected ? "promotions" : "catalog" }
+}
+
 struct HomeView: View {
     let loggedInUser: LoggedInUser
     @ObservedObject var dataService: DataService
     @Binding var hasLoadedOnce: Bool
     @Binding var isRefreshingHome: Bool
     @State private var showBookAppointment = false
-    @State private var showCatalog = false
-    @State private var openCatalogOnPromotions = false
+    @State private var catalogPresentation: CatalogPresentationItem?
     @State private var showNotifications = false
     @State private var showLoyaltyArchitecture = false
     @State private var showErrorAlert = false
@@ -92,10 +97,9 @@ struct HomeView: View {
         .fullScreenCover(isPresented: $showBookAppointment) {
             BookAppointmentFlowView(userId: loggedInUser.id, dataService: dataService, onDismiss: { showBookAppointment = false })
         }
-        .fullScreenCover(isPresented: $showCatalog) {
-            CatalogView(dataService: dataService, userId: loggedInUser.id, initialTab: openCatalogOnPromotions ? .promotions : nil, onBack: {
-                showCatalog = false
-                openCatalogOnPromotions = false
+        .fullScreenCover(item: $catalogPresentation) { item in
+            CatalogView(dataService: dataService, userId: loggedInUser.id, initialTab: item.openWithPromotionsSelected ? .promotions : nil, onBack: {
+                catalogPresentation = nil
             })
         }
         .fullScreenCover(isPresented: $showNotifications) {
@@ -157,7 +161,7 @@ struct HomeView: View {
                 
                 Spacer()
                 
-                Text(dataService.dashboardTierName ?? "Gold Member")
+                Text(dataService.currentTier ?? "Gold Member")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.appGoldMemberText)
                     .padding(.horizontal, 12)
@@ -172,65 +176,66 @@ struct HomeView: View {
             
             Spacer().frame(height: 3)
             
-            Text("\(dataService.currentSpending ?? dataService.dashboardPoints ?? 0)")
+            Text("$ \(dataService.currentSpending ?? dataService.dashboardPoints ?? 0)")
                 .font(.appPointsValue)
                 .foregroundColor(.appAccentGold)
                 .padding(.bottom, 5)
-            
-            VStack(alignment: .leading, spacing: 12) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Tier Progress")
-                        .font(.appPointsLabel)
-                        .foregroundColor(.appTextSecondary)
-                    
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.white)
-                                .frame(height: 6)
-                            
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.appAccentGold)
-                                .frame(width: max(0, geo.size.width * tierProgressFraction), height: 6)
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Tier Progress")
+                            .font(.appPointsLabel)
+                            .foregroundColor(.appTextSecondary)
+                        
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.white)
+                                    .frame(height: 6)
+                                
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.appAccentGold)
+                                    .frame(width: max(0, geo.size.width * tierProgressFraction), height: 6)
+                            }
                         }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 6)
+                        
+                        Text(tierProgressSubtitle)
+                            .font(.appGreetingSubtitle)
+                            .foregroundColor(.appTextSecondary)
                     }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 6)
                     
-                    Text(tierProgressSubtitle)
-                        .font(.appGreetingSubtitle)
-                        .foregroundColor(.appTextSecondary)
-                }
-                
-                HStack(spacing: 10) {
-                    Button(action: { openCatalogOnPromotions = false; showCatalog = true }) {
-                        Text("Redeem")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.appPrimaryDark)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                            .frame(height: 28)
-                            .padding(.horizontal, 14)
-                            .background(Color.appAccentGold)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    HStack(spacing: 0) {
+//                        Button(action: { openCatalogOnPromotions = false; showCatalog = true }) {
+//                            Text("Redeem")
+//                                .font(.system(size: 12, weight: .semibold))
+//                                .foregroundColor(.appPrimaryDark)
+//                                .lineLimit(1)
+//                                .minimumScaleFactor(0.8)
+//                                .frame(height: 28)
+//                                .padding(.horizontal, 14)
+//                                .background(Color.appAccentGold)
+//                                .clipShape(RoundedRectangle(cornerRadius: 8))
+//                        }
+//                        .buttonStyle(.plain)
+//                        .fixedSize(horizontal: true, vertical: false)
+//                        .hidden(
                     }
-                    .buttonStyle(.plain)
-                    .fixedSize(horizontal: true, vertical: false)
-                    
-                    Button(action: { showLoyaltyArchitecture = true }) {
-                        Text("View Tiers")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                            .frame(height: 28)
-                            .padding(.horizontal, 14)
-                            .background(Color.appAccentGold)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                    .buttonStyle(.plain)
-                    .fixedSize(horizontal: true, vertical: false)
                 }
+                Button(action: { showLoyaltyArchitecture = true }) {
+                    Text("See All Tier")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .frame(height: 28)
+                        .padding(.horizontal, 14)
+                        .background(Color.appAccentGold)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
+                .fixedSize(horizontal: true, vertical: false)
             }
         }
         .padding(.horizontal, 20)
@@ -252,7 +257,7 @@ struct HomeView: View {
             quickActionCard(
                 icon: "square.grid.2x2",
                 title: "Catalog",
-                action: { openCatalogOnPromotions = false; showCatalog = true }
+                action: { catalogPresentation = CatalogPresentationItem(openWithPromotionsSelected: false) }
             )
             .frame(maxWidth: .infinity)
         }
@@ -374,8 +379,7 @@ struct HomeView: View {
     private var promotionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader(title: "Promotions", seeAllAction: {
-                openCatalogOnPromotions = true
-                showCatalog = true
+                catalogPresentation = CatalogPresentationItem(openWithPromotionsSelected: true)
             })
             
             promotionCard
@@ -383,60 +387,46 @@ struct HomeView: View {
     }
     
     private var promotionCard: some View {
-        HStack(spacing: 0) {
-            ZStack {
-                Color.appAccentGold
-                
-                VStack(spacing: 0) {
-                    Text("20%")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.appPrimaryDark)
-                    Text("OFF")
-                        .font(.appCaption)
-                        .foregroundColor(.appPrimaryDark)
-                }
-            }
-            .frame(width: 100, height: 120)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("All Facial Treatments")
-                    .font(.appSectionHeader)
-                    .foregroundColor(.white)
-                
-                Text("Get 20% off on all facial treatments. Limited time only!")
-                    .font(.appGreetingSubtitle)
-                    .foregroundColor(.white.opacity(0.9))
-                
-                Spacer()
-                
-                HStack {
-                    Spacer()
-                    Button("BOOK NOW") {
-                        // TODO
+        Group {
+            if let url = APIConfig.imageURL(imagePath: dataService.latestPromotion?.imagePath) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .failure:
+                        Color.appPrimaryDark
+                    case .empty:
+                        Color.appPrimaryDark
+                            .overlay(ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white)))
+                    @unknown default:
+                        Color.appPrimaryDark
                     }
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.appTextPrimary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.appAccentGold)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
+                .frame(height: 120)
+                .frame(maxWidth: .infinity)
+                .clipped()
+            } else {
+                Color.appPrimaryDark
+                    .frame(height: 120)
+                    .frame(maxWidth: .infinity)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(height: 120)
-        .background(Color.appPrimaryDark)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     /// Progress bar fill: (currentSpending / nextTierSpending) * 100, capped at 1.0
     private var tierProgressFraction: CGFloat {
         let cur = dataService.currentSpending ?? dataService.dashboardPoints ?? 0
-        guard let next = dataService.nextTierSpending, next > 0 else { return 0 }
+        guard let next = dataService.nextTierSpending, next > 0 else {
+            print("[Tier Progress] cur: \(cur), next: nil/0 → fraction: 0")
+            return 0
+        }
         let fraction = Double(cur) / Double(next)
-        return min(1.0, max(0, CGFloat(fraction)))
+        let value = min(1.0, max(0, CGFloat(fraction)))
+        print("[Tier Progress] cur: \(cur), next: \(next), fraction: \(value) (\(Int(value * 100))%)")
+        return value
     }
     
     private var tierProgressSubtitle: String {
@@ -444,7 +434,7 @@ struct HomeView: View {
         guard let next = dataService.nextTierSpending, next > cur else {
             return "Max tier reached"
         }
-        return "\(next - cur) points until next tier"
+        return "Spend more  $\(next - cur) to reach next tier"
     }
     
     private func sectionHeader(title: String, seeAllAction: @escaping () -> Void) -> some View {

@@ -18,7 +18,7 @@ struct CatalogView: View {
     let initialTab: CatalogTab?
     let onBack: () -> Void
     
-    @State private var selectedTab: CatalogTab = .all
+    @State private var selectedTab: CatalogTab
     @State private var redeemError: String?
     @State private var showRedeemError = false
     @State private var showApiErrorAlert = false
@@ -28,13 +28,17 @@ struct CatalogView: View {
         self.userId = userId
         self.initialTab = initialTab
         self.onBack = onBack
+        self._selectedTab = State(initialValue: initialTab ?? .all)
     }
     
     private var catalogItems: [CatalogItem] {
         dataService.services.map { CatalogItem.from($0) }
     }
     
-    private var pointsBalance: Int { dataService.dashboardPoints ?? 0 }
+    /// Sum of points from getAllServices – shown in catalog nav bar right
+    private var pointsBalance: Int {
+        dataService.services.reduce(0) { $0 + ($1.points ?? 0) }
+    }
     
     private var isCatalogLoading: Bool {
         dataService.isLoadingDashboard || dataService.isLoadingServices || dataService.isLoadingPromotions
@@ -52,7 +56,7 @@ struct CatalogView: View {
                 if isCatalogLoading {
                     SpinnerOverlayView(tint: Color.appPrimaryDark)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if filteredItems.isEmpty {
+                } else if (selectedTab == .promotions ? dataService.promotions.isEmpty : catalogItems.isEmpty) {
                     Text("No data found")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.appTextSecondary)
@@ -60,8 +64,14 @@ struct CatalogView: View {
                 } else {
                     ScrollView(.vertical, showsIndicators: false) {
                         LazyVStack(spacing: 16) {
-                            ForEach(filteredItems) { item in
-                                catalogCard(item)
+                            if selectedTab == .promotions {
+                                ForEach(Array(dataService.promotions.enumerated()), id: \.offset) { _, promo in
+                                    promotionCell(promo)
+                                }
+                            } else {
+                                ForEach(catalogItems) { item in
+                                    catalogCard(item)
+                                }
                             }
                         }
                         .padding(.horizontal, 20)
@@ -74,7 +84,6 @@ struct CatalogView: View {
         .background(Color.appBackgroundWhite)
         .task {
             dataService.clearLastError()
-            await dataService.fetchDashboard(userId: userId)
             await dataService.fetchAllServices()
             await dataService.fetchPromotions()
         }
@@ -167,14 +176,60 @@ struct CatalogView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
+    /// Promotions tab cell – only image (height 120, full width) from getPromotions imagePath, no redeem
+    private func promotionCell(_ promo: PromotionItem) -> some View {
+        Group {
+            if let url = APIConfig.imageURL(imagePath: promo.imagePath) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .failure, .empty:
+                        Color.appLightBeige
+                            .overlay(ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .appPrimaryDark)))
+                    @unknown default:
+                        Color.appLightBeige
+                    }
+                }
+            } else {
+                Color.appLightBeige
+            }
+        }
+        .frame(height: 120)
+        .frame(maxWidth: .infinity)
+        .clipped()
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+    
     private func catalogCard(_ item: CatalogItem) -> some View {
         HStack(alignment: .top, spacing: 16) {
-            // Image (left) - ~1/3 card width, rounded square
+            // Image (left) - base URL + imagePath, or placeholder
             ZStack {
                 Color.appLightBeige
-                Image(systemName: item.imageName)
-                    .font(.system(size: 28))
-                    .foregroundColor(.appTextSecondary.opacity(0.5))
+                if let url = APIConfig.imageURL(imagePath: item.imagePath) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        case .failure, .empty:
+                            Image(systemName: item.imageName)
+                                .font(.system(size: 28))
+                                .foregroundColor(.appTextSecondary.opacity(0.5))
+                        @unknown default:
+                            Image(systemName: item.imageName)
+                                .font(.system(size: 28))
+                                .foregroundColor(.appTextSecondary.opacity(0.5))
+                        }
+                    }
+                } else {
+                    Image(systemName: item.imageName)
+                        .font(.system(size: 28))
+                        .foregroundColor(.appTextSecondary.opacity(0.5))
+                }
             }
             .frame(width: 100, height: 100)
             .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -252,7 +307,6 @@ struct CatalogView: View {
         Task {
             do {
                 try await dataService.redeemPoints(userId: userId, points: item.points)
-                await dataService.fetchDashboard(userId: userId)
             } catch {
                 await MainActor.run {
                     redeemError = error.localizedDescription
@@ -261,6 +315,7 @@ struct CatalogView: View {
             }
         }
     }
+    
 }
 
 struct CatalogView_Previews: PreviewProvider {

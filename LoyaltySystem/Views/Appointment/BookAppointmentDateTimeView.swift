@@ -281,7 +281,6 @@ struct BookAppointmentDateTimeView: View {
             do {
                 try await dataService.bookAppointment(branchName: branchName, serviceId: serviceId, userId: userId, date: dateString, time: timeString)
                 await dataService.fetchUserAppointments(userId: userId, status: "A")
-                await dataService.fetchDashboard(userId: userId)
                 await MainActor.run { onConfirm() }
             } catch {
                 await MainActor.run {
