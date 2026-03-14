@@ -84,7 +84,7 @@ final class AuthViewModel: ObservableObject {
         
         defer { isLoading = false }
         
-        let fcmToken = await FCMService.shared.getToken() ?? ""
+        let fcmToken = await FCMService.shared.getToken() ?? "123"
         let endpoint = APIEndpoint.login(
             email: email,
             password: password,
