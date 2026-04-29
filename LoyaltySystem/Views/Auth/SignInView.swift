@@ -60,7 +60,7 @@ struct SignInView: View {
                     
                     VStack(spacing: 16) {
                         VStack(alignment: .leading, spacing: 4) {
-                            TextField("Enter your email", text: Binding(
+                            TextField(LocalizedStringKey("Enter your email"), text: Binding(
                                 get: { viewModel.email },
                                 set: { viewModel.email = String($0.prefix(100)) }
                             ))
@@ -81,12 +81,12 @@ struct SignInView: View {
                         HStack(spacing: 12) {
                             Group {
                                 if viewModel.isPasswordVisible {
-                                    TextField("Enter your password", text: Binding(
+                                    TextField(LocalizedStringKey("Enter your password"), text: Binding(
                                         get: { viewModel.password },
                                         set: { viewModel.password = String($0.prefix(15)) }
                                     ))
                                 } else {
-                                    SecureField("Enter your password", text: Binding(
+                                    SecureField(LocalizedStringKey("Enter your password"), text: Binding(
                                         get: { viewModel.password },
                                         set: { viewModel.password = String($0.prefix(15)) }
                                     ))
@@ -163,6 +163,17 @@ struct SignInView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
+            }
+
+            // Top-right language toggle
+            VStack {
+                HStack {
+                    Spacer()
+                    LanguageDropdown()
+                    .padding(.trailing, 16)
+                    .padding(.top, 0)
+                }
+                Spacer()
             }
             
             if viewModel.isLoading {

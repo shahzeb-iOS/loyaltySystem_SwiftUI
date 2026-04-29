@@ -66,7 +66,7 @@ struct CatalogView: View {
                         LoadingOverlay()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else if (selectedTab == .promotions ? dataService.promotions.isEmpty : catalogItems.isEmpty) {
-                        Text("No data found")
+                        Text(LocalizedStringKey("No data found"))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.appTextSecondary)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -167,14 +167,14 @@ struct CatalogView: View {
             }
             .buttonStyle(.plain)
             
-            Text("Catalog")
+            Text(LocalizedStringKey("Catalog"))
                 .font(.system(size: 22, weight: .bold))
                 .foregroundColor(.black)
             
             Spacer()
             
             HStack(spacing: 2) {
-                Text("PTS:")
+                Text(LocalizedStringKey("PTS:"))
                     .font(.system(size: 12, weight: .regular))
                     .foregroundColor(.appAccentGold.opacity(0.9))
                 Text("\(pointsBalance)")
@@ -197,7 +197,7 @@ struct CatalogView: View {
                 Button {
                     selectedTab = tab
                 } label: {
-                    Text(tab.rawValue)
+                    Text(LocalizedStringKey(tab.rawValue))
                         .font(.system(size: 14, weight: selectedTab == tab ? .bold : .regular))
                         .foregroundColor(selectedTab == tab ? .black : .appTextSecondary)
                         .frame(maxWidth: .infinity)

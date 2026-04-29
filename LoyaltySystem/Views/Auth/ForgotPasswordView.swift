@@ -2,7 +2,7 @@
 //  ForgotPasswordView.swift
 //  LoyaltySystem
 //
-//  Forgot password - enter email to reset
+//  created by Shahzaib khan
 //
 
 import SwiftUI
@@ -53,7 +53,7 @@ struct ForgotPasswordView: View {
                     
                     Spacer().frame(height: 40)
                     
-                    TextField("Enter your email", text: Binding(
+                    TextField(LocalizedStringKey("Enter your email"), text: Binding(
                         get: { viewModel.email },
                         set: { viewModel.email = String($0.prefix(100)) }
                     ))

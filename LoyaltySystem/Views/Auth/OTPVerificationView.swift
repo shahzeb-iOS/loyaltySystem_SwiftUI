@@ -58,7 +58,7 @@ struct OTPVerificationView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 17)
                         .padding(.top, 10)
-                    .padding(.bottom, 24)
+                        .padding(.bottom, 24)
                     
                     // 4 OTP digit fields: first empty → next sab disable; pichle mein value ho to next enable
                     HStack(spacing: 16) {

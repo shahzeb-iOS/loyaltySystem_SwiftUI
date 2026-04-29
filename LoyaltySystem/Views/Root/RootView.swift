@@ -10,6 +10,7 @@ import SwiftUI
 struct RootView: View {
     @StateObject private var flowViewModel = AppFlowViewModel()
     @State private var showForgotPasswordPush = false
+    @EnvironmentObject private var languageManager: LanguageManager
     
     var body: some View {
         ZStack {

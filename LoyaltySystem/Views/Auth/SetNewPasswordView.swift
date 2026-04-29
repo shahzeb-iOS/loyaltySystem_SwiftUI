@@ -52,12 +52,12 @@ struct SetNewPasswordView: View {
                     HStack(spacing: 12) {
                         Group {
                             if viewModel.isPasswordVisible {
-                                TextField("Enter your password", text: Binding(
+                                TextField(LocalizedStringKey("Enter your password"), text: Binding(
                                     get: { viewModel.password },
                                     set: { viewModel.password = String($0.prefix(15)) }
                                 ))
                             } else {
-                                SecureField("Enter your password", text: Binding(
+                                SecureField(LocalizedStringKey("Enter your password"), text: Binding(
                                     get: { viewModel.password },
                                     set: { viewModel.password = String($0.prefix(15)) }
                                 ))

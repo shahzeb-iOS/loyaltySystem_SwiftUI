@@ -127,11 +127,13 @@ struct HomeView: View {
     
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 7) {
-            Text("Hello, \(loggedInUser.name.isEmpty ? "Guest" : loggedInUser.name)!")
+            (Text(LocalizedStringKey("Hello, "))
+                + Text(loggedInUser.name.isEmpty ? String(localized: "Guest") : loggedInUser.name)
+                + Text(LocalizedStringKey("!")))
                 .font(.appGreeting)
                 .foregroundColor(.black)
             
-            Text("How can we help you today?")
+            Text(LocalizedStringKey("How can we help you today?"))
                 .font(.appGreetingSubtitle)
                 .foregroundColor(.appTextSecondary)
         }
@@ -147,13 +149,13 @@ struct HomeView: View {
     private var pointsBalanceCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Total Spending")
+                Text(LocalizedStringKey("Total Spending"))
                     .font(.custom("Poppins-Regular", size: 16))
                     .foregroundColor(.appTextSecondary)
                 
                 Spacer()
                 
-                Text(dataService.currentTier ?? "Gold Member")
+                Text(LocalizedStringKey(dataService.currentTier ?? "Gold Member"))
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.appGoldMemberText)
                     .padding(.horizontal, 12)
@@ -175,7 +177,7 @@ struct HomeView: View {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 12) {
                     VStack(alignment: .leading, spacing: 5) {
-                        Text("Tier Progress")
+                        Text(LocalizedStringKey("Tier Progress"))
                             .font(.appPointsLabel)
                             .foregroundColor(.appTextSecondary)
                         
@@ -216,7 +218,7 @@ struct HomeView: View {
                     }
                 }
                 Button(action: { showLoyaltyArchitecture = true }) {
-                    Text("See All Tier")
+                    Text(LocalizedStringKey("See All Tier"))
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.white)
                         .lineLimit(1)
@@ -255,7 +257,7 @@ struct HomeView: View {
         }
     }
     
-    private func quickActionCard(icon: String, title: String, action: @escaping () -> Void = {}) -> some View {
+    private func quickActionCard(icon: String, title: LocalizedStringKey, action: @escaping () -> Void = {}) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: icon)
@@ -432,7 +434,7 @@ struct HomeView: View {
     
     private func sectionHeader(title: String, seeAllAction: @escaping () -> Void, showSeeAll: Bool = true) -> some View {
         HStack {
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .font(.appSectionHeader)
                 .foregroundColor(.black)
             
@@ -440,7 +442,7 @@ struct HomeView: View {
             
             if showSeeAll {
                 Button(action: seeAllAction) {
-                    Text("See All")
+                    Text(LocalizedStringKey("See All"))
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.appAccentGold)
                 }

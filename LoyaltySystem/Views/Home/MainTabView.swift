@@ -117,7 +117,7 @@ struct MainTabView: View {
         )
     }
     
-    private func tabItem(_ tab: MainTab, icon: String, label: String) -> some View {
+    private func tabItem(_ tab: MainTab, icon: String, label: LocalizedStringKey) -> some View {
         Button {
             if tab == .rewards {
                 catalogPresentation = CatalogPresentationItem(openWithPromotionsSelected: false)

@@ -332,7 +332,7 @@ struct SignUpView: View {
 }
 
 struct SignUpTextField: View {
-    let placeholder: String
+    let placeholder: LocalizedStringKey
     @Binding var text: String
     let isFocused: Bool
     

@@ -43,6 +43,18 @@ struct ProfileView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.appBackgroundWhite)
+
+            // Top-right language dropdown (overlay) so opening doesn't push layout
+            VStack {
+                HStack {
+                    Spacer()
+                    LanguageDropdown()
+                        .padding(.trailing, 20)
+                        .padding(.top, 0)
+                        .zIndex(2000)
+                }
+                Spacer()
+            }
             
             if isDeletingAccount {
                 LoadingOverlay()
@@ -157,7 +169,7 @@ struct ProfileView: View {
         }
     }
     
-    private func profileField(icon: String, label: String, value: String) -> some View {
+    private func profileField(icon: String, label: LocalizedStringKey, value: String) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 18))

@@ -119,7 +119,7 @@ struct HistoryView: View {
                 Button {
                     selectedFilter = filter
                 } label: {
-                    Text(filter.rawValue)
+                    Text(LocalizedStringKey(filter.rawValue))
                         .font(.system(size: 14, weight: selectedFilter == filter ? .bold : .regular))
                         .foregroundColor(selectedFilter == filter ? .black : .appTextSecondary)
                         .frame(maxWidth: .infinity)
